@@ -1,4 +1,4 @@
-﻿#include "inc/billing_server.hpp"
+#include "inc/billing_server.hpp"
 #include <iostream>
 
 int main()

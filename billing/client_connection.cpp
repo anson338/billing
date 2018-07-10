@@ -63,7 +63,7 @@ void ClientConnection::readFromClient()
 #ifdef OPEN_SERVER_DEBUG
 		Logger::write("read client end");
 #endif
-		//¶ÁÈ¡´íÎó
+		//è¯»å–é”™è¯¯
 		if (error && (error != asio::error::eof)) {
 #ifdef OPEN_SERVER_DEBUG
 			Logger::write(string("read client error ")+error.message());
@@ -73,7 +73,7 @@ void ClientConnection::readFromClient()
 #ifdef OPEN_SERVER_DEBUG
 			Logger::write(string("request data\r\n") + *request);
 #endif
-			//·µ»ØÏìÓ¦
+			//è¿”å›žå“åº”
 			this->writeResponse();
 		}
 	});

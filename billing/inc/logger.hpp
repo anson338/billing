@@ -1,6 +1,6 @@
 #pragma once
 #include "common.hpp"
-//日志记录工具
+//鏃ュ織璁板綍宸ュ叿
 #ifdef OPEN_SERVER_DEBUG
 #include <iostream>
 #include <fstream>

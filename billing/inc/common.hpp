@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 //打开调试
 #define OPEN_SERVER_DEBUG
 //配置文件

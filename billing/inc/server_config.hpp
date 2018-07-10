@@ -2,7 +2,7 @@
 #include <string>
 using std::string;
 
-/*服务器配置读取类*/
+/*鏈嶅姟鍣ㄩ厤缃鍙栫被*/
 class ServerConfig
 {
 public:
