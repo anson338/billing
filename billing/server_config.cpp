@@ -32,7 +32,7 @@ const string & ServerConfig::getIp()
 	return this->ip;
 }
 
-const int & ServerConfig::getPort()
+const unsigned short & ServerConfig::getPort()
 {
 	return this->port;
 }

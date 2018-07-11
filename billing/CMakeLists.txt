@@ -3,11 +3,15 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
+# 添加依赖
+include_directories("deps/json" "deps/asio/asio/include")
+#mysql
+include_directories("deps/mysql/mysql-connector-c-6.1.11-win32/include")
+link_directories("deps/mysql/mysql-connector-c-6.1.11-win32/lib/vs14")
+link_libraries("mysqlclient")
 # 将源添加到此项目的可执行文件。
 add_executable (billing "main.cpp" "inc/common.hpp" "inc/billing_server.hpp" "billing_server.cpp" 
 "inc/server_config.hpp" "server_config.cpp" "inc/logger.hpp" "logger.cpp" 
 "inc/client_connection.hpp" "client_connection.cpp")
 
 # TODO: 如有需要，请添加测试并安装目标。
-# 添加依赖
-include_directories("deps/json" "deps/asio/asio/include")

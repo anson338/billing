@@ -9,8 +9,8 @@ public:
 	ServerConfig();
 	~ServerConfig();
 	const string& getIp();
-	const int& getPort();
+	const unsigned short& getPort();
 private:
 	string ip;
-	int port;
+	unsigned short port;
 };
