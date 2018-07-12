@@ -19,5 +19,5 @@ private:
 	BillingServer * server;
 	tcp::socket socket;
 	void readFromClient();
-	void writeResponse();
+	void processRequest(std::shared_ptr<string> request, std::size_t size);
 };
