@@ -3,6 +3,8 @@
 #include "logger.hpp"
 #include <asio.hpp>
 using asio::ip::tcp;
+#include "request_handler.hpp"
+#include "billing_data.hpp"
 
 class BillingServer;
 
@@ -20,4 +22,5 @@ private:
 	tcp::socket socket;
 	void readFromClient();
 	void processRequest(std::shared_ptr<string> request, std::size_t size);
+	void processRequest(std::shared_ptr<RequestHandler> handler, BillingData & requestData);
 };

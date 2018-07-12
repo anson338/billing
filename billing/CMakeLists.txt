@@ -22,6 +22,8 @@ ENDIF ()
 # 将源添加到此项目的可执行文件。
 add_executable (billing "main.cpp" "inc/common.hpp" "inc/billing_server.hpp" "billing_server.cpp" 
 "inc/server_config.hpp" "server_config.cpp" "inc/logger.hpp" "logger.cpp" 
-"inc/client_connection.hpp" "client_connection.cpp")
+"inc/client_connection.hpp" "client_connection.cpp"
+"inc/hex_tool.hpp" "inc/hex_tool.cpp"
+"inc/billing_data.hpp" "inc/billing_data.cpp" "inc/request_handler.hpp" "inc/handler/connect_handler.hpp")
 
 # TODO: 如有需要，请添加测试并安装目标。

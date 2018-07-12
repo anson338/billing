@@ -59,7 +59,7 @@ void ClientConnection::readFromClient()
 	Logger::write("read client start");
 #endif
 	auto request = std::make_shared<string>();
-	request->resize(500);
+	request->resize(260);
 	auto selfPointer(shared_from_this());
 	socket.async_receive(
 		asio::buffer(*request),
@@ -116,25 +116,39 @@ void ClientConnection::processRequest(std::shared_ptr<string> request, std::size
 		this->server->ioService.stop();
 		return;
 	}
-	auto selfPointer(shared_from_this());
-	auto resp = std::make_shared<string>("HTTP/1.1 200 OK\r\n"
-		"Content-Type: text/plain\r\n"
-		"Content-Length: 11\r\n"
-		"Connection: keep-alive\r\n"
-		"Server: liuguang/server\r\n\r\n"
-		"hello world");
+	BillingData requestData(request);
+	unsigned char requestType = requestData.getPayloadType();
+	auto it = server->handlers.find(requestType);
+	if (it != server->handlers.end()) {
+		this->processRequest((*it).second, requestData);
+	}
+}
+
+void ClientConnection::processRequest(std::shared_ptr<RequestHandler> handler, BillingData & requestData)
+{
+	cout << "request billing data" << endl;
+	string debugStr;
+	requestData.doDump(debugStr);
+	cout << debugStr << endl;
+	BillingData responseData;
+	handler->processRequest(requestData, responseData);
+	if (responseData.isDataValid()) {
+		auto selfPointer(shared_from_this());
 #ifdef OPEN_SERVER_DEBUG
-	Logger::write("write client start");
+		Logger::write("write client start");
 #endif
-	socket.async_send(
-		asio::buffer(*resp),
-		[this, selfPointer, resp](const asio::error_code& error, std::size_t size) {
+		string resp;
+		responseData.packData(resp);
+		socket.async_send(
+			asio::buffer(resp),
+			[this, selfPointer, resp](const asio::error_code& error, std::size_t size) {
 
 #ifdef OPEN_SERVER_DEBUG
-		Logger::write("write client end");
-		Logger::write(string("response data\r\n") + *resp);
+			Logger::write("write client end");
+			Logger::write(string("response data\r\n") + resp);
 #endif
-		this->writeHandler(error, size);
+			this->writeHandler(error, size);
+		}
+		);
 	}
-	);
 }

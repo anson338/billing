@@ -1,6 +1,7 @@
 #include "inc/billing_server.hpp"
 #include "inc/client_connection.hpp"
 #include <iostream>
+#include "inc/handler/connect_handler.hpp"
 using std::cout;
 using std::endl;
 
@@ -36,6 +37,7 @@ void BillingServer::run()
 		this->startAccept();
 		ioService.run();
 	}
+	this->handlers[0xa0] = std::make_shared<ConnectHandler>(mysql);
 }
 void BillingServer::stop()
 {

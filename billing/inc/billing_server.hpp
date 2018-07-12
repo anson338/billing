@@ -4,6 +4,9 @@
 #include <asio.hpp>
 #include <mysql.h>
 using asio::ip::tcp;
+#include <map>
+#include <memory>
+#include "request_handler.hpp"
 
 class BillingServer
 {
@@ -22,4 +25,5 @@ private:
 	bool stopMask;
 	void startAccept();
 	bool testConnect();
+	std::map<unsigned char, std::shared_ptr<RequestHandler>> handlers;
 };
