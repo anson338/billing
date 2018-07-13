@@ -1,3 +1,4 @@
+#include "inc/common.hpp"
 #include "inc/billing_server.hpp"
 #include <cstring>
 int main(int argc, char** argv)
@@ -9,6 +10,12 @@ int main(int argc, char** argv)
 			server->stop();
 			return 0;
 		}
+#ifdef OPEN_SERVER_DEBUG
+		else if (strcmp(command, "test") == 0) {
+			server->sendTestData();
+			return 0;
+		}
+#endif
 	}
 	server->run();
 	return 0;

@@ -3,6 +3,7 @@
 using std::string;
 #include <memory>
 #include <vector>
+#include "hex_tool.hpp"
 using std::vector;
 class BillingData
 {
@@ -22,14 +23,31 @@ public:
 	const vector<char>&  getPayloadData() {
 		return this->payloadData;
 	}
+
 	void setPayloadData(const vector<char>& payloadData) {
 		this->payloadData.resize(payloadData.size());
 		this->payloadData.clear();
+		this->appendPayloadData(payloadData);
+	}
+
+	void setPayloadData(const char* hexStr) {
+		this->payloadData.clear();
+		this->appendPayloadData(hexStr);
+	}
+
+	void appendPayloadData(const vector<char>& payloadData) {
 		for (auto it = payloadData.begin(); it != payloadData.end(); it++) {
 			this->payloadData.emplace_back(*it);
 		}
-		this->payloadLength =(unsigned short) this->payloadData.size() + 3;
+		this->payloadLength = (unsigned short)this->payloadData.size() + 3;
 	}
+
+	void appendPayloadData(const char* hexStr) {
+		vector<char> data;
+		hexToBytes(hexStr, data);
+		this->appendPayloadData(data);
+	}
+
 	const vector<char>& getId() {
 		return this->id;
 	}

@@ -15,6 +15,10 @@ public:
 	~BillingServer();
 	void run();
 	void stop();
+#ifdef OPEN_SERVER_DEBUG
+	void sendTestData();
+	void readTestData(tcp::socket& socket);
+#endif
 	friend class ClientConnection;
 private:
 	ServerConfig config;

@@ -37,12 +37,12 @@ BillingData::BillingData(std::shared_ptr<vector<char>> request) :isValid(true)
 		this->payloadData.resize(dataCount);
 		this->payloadData.clear();
 		for (size_t i = 0; i < dataCount; i++) {
-			this->payloadData.emplace_back(request->at(7+i));
+			this->payloadData.emplace_back(request->at(7 + i));
 		}
 	}
 }
 
-BillingData::BillingData() :isValid(true)
+BillingData::BillingData() :isValid(true), payloadLength(3)
 {
 }
 
@@ -63,11 +63,11 @@ void BillingData::packData(vector<char>& buff)
 	buff.emplace_back(maskBuff[0]);
 	buff.emplace_back(maskBuff[1]);
 	unsigned short len0, len1;
-	len0 = this->payloadLength >> 2;
-	len1 = this->payloadLength & 0xf;
+	len0 = this->payloadLength >> 8;
+	len1 = this->payloadLength & 0xff;
 	buff.emplace_back((unsigned char)len0);
-	buff.emplace_back( (unsigned char)len1);
-	buff.emplace_back( this->payloadType);
+	buff.emplace_back((unsigned char)len1);
+	buff.emplace_back(this->payloadType);
 	buff.emplace_back(this->id[0]);
 	buff.emplace_back(this->id[1]);
 	for (auto it = this->payloadData.begin(); it != this->payloadData.end(); it++) {
@@ -82,22 +82,12 @@ void BillingData::doDump(string& debug)
 	debug.clear();
 	debug.append("{\r\nisValid: ").append(this->isValid ? "true" : "false").append(",\r\n");
 	debug.append("payloadLength: ").append(std::to_string(this->payloadLength)).append(",\r\n");
+	vector<char> payloadTypeBytes(1, this->payloadType);
 	string hexStr;
+	bytesToHex(payloadTypeBytes, hexStr);
+	debug.append("payloadType: 0x").append(hexStr).append(",\r\n");
 	bytesToHex(id, hexStr);
-	debug.append("id: ").append(hexStr).append(",\r\n");
-	debug.append(29, '=');
-	bytesToHex(payloadData, hexStr);
-	for (std::size_t i = 0; i < hexStr.length(); i++) {
-		if (i % 2 == 0) {
-			if (i % 20 == 0) {
-				debug.append("\r\n");
-			}
-			else {
-				debug.append(" ");
-			}
-		}
-		debug.append(1, hexStr[i]);
-	}
-	debug.append("\r\n");
-	debug.append(29, '=').append("\r\n}");
+	debug.append("id: 0x").append(hexStr).append(",\r\n");
+	bytesToHexDebug(payloadData, hexStr);
+	debug.append(hexStr).append("\r\n}");
 }

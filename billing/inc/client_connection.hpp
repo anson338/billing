@@ -24,5 +24,5 @@ private:
 	tcp::socket socket;
 	void readFromClient();
 	void processRequest(std::shared_ptr<vector<char>> request, std::size_t size);
-	void processRequest(std::shared_ptr<RequestHandler> handler, BillingData & requestData);
+	void processRequest(std::shared_ptr<RequestHandler> handler, BillingData& requestData);
 };

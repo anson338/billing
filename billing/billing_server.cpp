@@ -4,6 +4,9 @@
 #include "inc/handler/connect_handler.hpp"
 using std::cout;
 using std::endl;
+#ifdef OPEN_SERVER_DEBUG
+#include "inc/billing_data.hpp"
+#endif
 
 BillingServer::BillingServer() :serverEndpoint(
 	tcp::endpoint(
@@ -34,10 +37,11 @@ void BillingServer::run()
 {
 	cout << "billing server run at " << this->config.getIp() << ":" << this->config.getPort() << endl;
 	if (this->testConnect()) {
+		//加载handler
+		this->handlers[0xa0] = std::make_shared<ConnectHandler>(mysql);
 		this->startAccept();
 		ioService.run();
 	}
-	this->handlers[0xa0] = std::make_shared<ConnectHandler>(mysql);
 }
 void BillingServer::stop()
 {
@@ -50,8 +54,8 @@ void BillingServer::stop()
 		if (ec) {
 			throw std::exception(ec.message().c_str());
 		}
-		vector<char> command(4,(char)0x0);
-		socket.write_some(asio::buffer(command), ec); 
+		vector<char> command(4, (char)0x0);
+		socket.write_some(asio::buffer(command), ec);
 		if (ec) {
 			throw std::exception(ec.message().c_str());
 		}
@@ -64,6 +68,75 @@ void BillingServer::stop()
 	}
 
 }
+
+#ifdef OPEN_SERVER_DEBUG
+void BillingServer::sendTestData() {
+	try
+	{
+		tcp::socket socket(ioService);
+		asio::error_code ec;
+		socket.connect(serverEndpoint, ec);
+		if (ec) {
+			throw std::runtime_error(ec.message().c_str());
+		}
+		BillingData testData;
+		vector<char> idArr;
+		idArr.emplace_back('a');
+		idArr.emplace_back('b');
+		testData.setId(idArr);
+		testData.setPayloadType(0xa0);
+		testData.setPayloadData("01020304");
+		vector<char> sendData;
+		testData.packData(sendData);
+		string debugStr;
+		testData.doDump(debugStr);
+		cout << debugStr << endl;
+		bytesToHexDebug(sendData, debugStr);
+		cout << "full binary data" << endl;
+		cout << debugStr << endl;
+		//绑定读取
+		this->readTestData(socket);
+		socket.async_send(asio::buffer(sendData), [this, &socket](const asio::error_code& error, std::size_t bytes_transferred) {
+			Logger::write("send ok");
+		});
+		ioService.run();
+	}
+	catch (const std::exception& e)
+	{
+		cout << "some error: " << e.what() << endl;
+	}
+}
+void BillingServer::readTestData(tcp::socket& socket) {
+	auto response = std::make_shared<vector<char>>();
+	response->resize(260);
+	response->clear();
+	socket.async_receive(asio::buffer(*response), [response, this, &socket](const asio::error_code& error, std::size_t bytes_transferred) {
+		if (!error) {
+			if (bytes_transferred > 0) {
+				string debugStr;
+				bytesToHexDebug(*response, debugStr);
+				cout << "get response data" << endl;
+				cout << debugStr << endl;
+				socket.close();
+			}
+			else {
+				this->readTestData(socket);
+			}
+			Logger::write("read ok");
+			Logger::write(std::to_string(bytes_transferred));
+		}
+		else if (error == asio::error::eof) {
+			//读取完毕
+			socket.close();
+		}
+		else {
+			// Some other error.
+			throw asio::system_error(error);
+		}
+	});
+}
+#endif
+
 void BillingServer::startAccept() {
 	if (this->stopMask) {
 		cout << "stop server accept" << endl;

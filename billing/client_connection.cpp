@@ -95,7 +95,7 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 	Logger::write(requestHexDebug);
 #endif
 	//判断是否为命令
-	if (request->size()==4) {
+	if (request->size() == 4) {
 		string commandHex;
 		bytesToHex(*request, commandHex);
 		//close命令
@@ -113,6 +113,15 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 		if (it != server->handlers.end()) {
 			this->processRequest((*it).second, requestData);
 		}
+		else {
+			vector<char> payloadTypeBytes(1, requestType);
+			string hexStr;
+			bytesToHex(payloadTypeBytes, hexStr);
+			cout << "[error]unkown BillingData type: 0x" << hexStr << endl;
+			string debugStr;
+			requestData.doDump(debugStr);
+			cout << debugStr << endl;
+		}
 	}
 	else {
 		cout << "not valid BillingData" << endl;
@@ -121,10 +130,12 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 
 void ClientConnection::processRequest(std::shared_ptr<RequestHandler> handler, BillingData & requestData)
 {
-	cout << "request billing data" << endl;
+#ifdef OPEN_SERVER_DEBUG
+	Logger::write("request billing data");
 	string debugStr;
 	requestData.doDump(debugStr);
-	cout << debugStr << endl;
+	Logger::write(debugStr);
+#endif
 	BillingData responseData;
 	handler->processRequest(requestData, responseData);
 	if (responseData.isDataValid()) {
@@ -132,17 +143,21 @@ void ClientConnection::processRequest(std::shared_ptr<RequestHandler> handler, B
 #ifdef OPEN_SERVER_DEBUG
 		Logger::write("write client start");
 #endif
-		vector<char> resp;
-		responseData.packData(resp);
+		auto resp = std::make_shared<vector<char>>();
+		responseData.packData(*resp);
+#ifdef OPEN_SERVER_DEBUG
+		string hexStr;
+		bytesToHexDebug(*resp, hexStr);
+		Logger::write(string("response data\r\n") + hexStr);
+		responseData.doDump(debugStr);
+		Logger::write(debugStr);
+#endif
 		socket.async_send(
-			asio::buffer(resp),
-			[this, selfPointer, &resp](const asio::error_code& error, std::size_t size) {
+			asio::buffer(*resp),
+			[this, selfPointer, resp](const asio::error_code& error, std::size_t size) {
 
 #ifdef OPEN_SERVER_DEBUG
 			Logger::write("write client end");
-			string hexStr;
-			bytesToHex(resp,hexStr);
-			Logger::write(string("response data\r\n") + hexStr);
 #endif
 			this->writeHandler(error, size);
 		}
