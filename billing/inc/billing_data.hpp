@@ -2,12 +2,12 @@
 #include <string>
 using std::string;
 #include <memory>
-#include <iostream>
-using std::endl;
+#include <vector>
+using std::vector;
 class BillingData
 {
 public:
-	BillingData(std::shared_ptr<string> request);
+	BillingData(std::shared_ptr<vector<char>> request);
 	BillingData();
 	~BillingData();
 	const unsigned char& getPayloadType() {
@@ -19,24 +19,28 @@ public:
 	const unsigned short& getPayloadLength() {
 		return this->payloadLength;
 	}
-	const char*  getPayloadData() {
-		return this->payloadData.c_str();
+	const vector<char>&  getPayloadData() {
+		return this->payloadData;
 	}
-	void setPayloadData(const char* payloadData) {
+	void setPayloadData(const vector<char>& payloadData) {
+		this->payloadData.resize(payloadData.size());
 		this->payloadData.clear();
-		this->payloadData+= payloadData;
-		this->payloadLength =(unsigned short) this->payloadData.length() + 3;
+		for (auto it = payloadData.begin(); it != payloadData.end(); it++) {
+			this->payloadData.emplace_back(*it);
+		}
+		this->payloadLength =(unsigned short) this->payloadData.size() + 3;
 	}
-	const char* getId() {
-		return this->id.c_str();
+	const vector<char>& getId() {
+		return this->id;
 	}
 
-	void setId(const char* id) {
+	void setId(const vector<char>& id) {
 		this->id.clear();
-		this->id.append(id);
+		this->id.emplace_back(id[0]);
+		this->id.emplace_back(id[1]);
 	}
 
-	void packData(string& buff);
+	void packData(vector<char>& buff);
 	void doDump(string& debug);
 	const bool& isDataValid() {
 		return this->isValid;
@@ -46,6 +50,6 @@ private:
 	bool isValid;
 	unsigned short payloadLength;
 	unsigned char payloadType;
-	string id;
-	string payloadData;
+	vector<char> id;
+	vector<char> payloadData;
 };

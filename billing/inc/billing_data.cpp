@@ -2,16 +2,25 @@
 #include "billing_data.hpp"
 #include "hex_tool.hpp"
 
-BillingData::BillingData(std::shared_ptr<string> request) :isValid(true)
+BillingData::BillingData(std::shared_ptr<vector<char>> request) :isValid(true)
 {
-	unsigned short requestLength = (unsigned short)request->length();
+	unsigned short requestLength = (unsigned short)request->size();
 	string tmp;
-	charsToHex(request->substr(0, 2).c_str(), tmp);
+	vector<char> tmpBytes(2);
+	tmpBytes.clear();
+	tmpBytes.emplace_back(request->at(0));
+	tmpBytes.emplace_back(request->at(1));
+	bytesToHex(tmpBytes, tmp);
+	//头部2字节检测
 	if (tmp.compare("AA55") != 0) {
 		this->isValid = false;
 	}
 	if (this->isValid) {
-		charsToHex(request->substr(requestLength - 2, 2).c_str(), tmp);
+		//尾部2字节检测
+		tmpBytes.clear();
+		tmpBytes.emplace_back(request->at(requestLength - 2));
+		tmpBytes.emplace_back(request->at(requestLength - 1));
+		bytesToHex(tmpBytes, tmp);
 		if (tmp.compare("55AA") != 0) {
 			this->isValid = false;
 		}
@@ -22,8 +31,14 @@ BillingData::BillingData(std::shared_ptr<string> request) :isValid(true)
 		len1 = (unsigned short)request->at(3);
 		this->payloadLength = (len0 << 8) + len1;
 		this->payloadType = (unsigned char)request->at(4);
-		this->id = request->substr(5, 2);
-		this->payloadData = request->substr(7, this->payloadLength - 3);
+		this->id.emplace_back(request->at(5));
+		this->id.emplace_back(request->at(6));
+		size_t dataCount = this->payloadLength - 3;
+		this->payloadData.resize(dataCount);
+		this->payloadData.clear();
+		for (size_t i = 0; i < dataCount; i++) {
+			this->payloadData.emplace_back(request->at(7+i));
+		}
 	}
 }
 
@@ -35,25 +50,31 @@ BillingData::~BillingData()
 {
 }
 
-void BillingData::packData(string& buff)
+void BillingData::packData(vector<char>& buff)
 {
 	if (!this->isValid) {
 		return;
 	}
+	buff.resize(4 + 2 + this->payloadLength);
 	buff.clear();
-	string tmpStr;
-	hexToChars("AA55", tmpStr);
-	buff.append(tmpStr);
+	vector<char> maskBuff(2);
+	maskBuff.clear();
+	hexToBytes("AA55", maskBuff);
+	buff.emplace_back(maskBuff[0]);
+	buff.emplace_back(maskBuff[1]);
 	unsigned short len0, len1;
 	len0 = this->payloadLength >> 2;
 	len1 = this->payloadLength & 0xf;
-	buff.append(1, (unsigned char)len0);
-	buff.append(1, (unsigned char)len1);
-	buff.append(1, this->payloadType);
-	buff.append(this->id);
-	buff.append(this->payloadData);
-	hexToChars("55AA", tmpStr);
-	buff.append(tmpStr);
+	buff.emplace_back((unsigned char)len0);
+	buff.emplace_back( (unsigned char)len1);
+	buff.emplace_back( this->payloadType);
+	buff.emplace_back(this->id[0]);
+	buff.emplace_back(this->id[1]);
+	for (auto it = this->payloadData.begin(); it != this->payloadData.end(); it++) {
+		buff.emplace_back(*it);
+	}
+	buff.emplace_back(maskBuff[1]);
+	buff.emplace_back(maskBuff[0]);
 }
 
 void BillingData::doDump(string& debug)
@@ -61,10 +82,11 @@ void BillingData::doDump(string& debug)
 	debug.clear();
 	debug.append("{\r\nisValid: ").append(this->isValid ? "true" : "false").append(",\r\n");
 	debug.append("payloadLength: ").append(std::to_string(this->payloadLength)).append(",\r\n");
-	debug.append("id: ").append(id).append(",\r\n");
-	debug.append(29, '=');
 	string hexStr;
-	charsToHex(payloadData.c_str(), hexStr);
+	bytesToHex(id, hexStr);
+	debug.append("id: ").append(hexStr).append(",\r\n");
+	debug.append(29, '=');
+	bytesToHex(payloadData, hexStr);
 	for (std::size_t i = 0; i < hexStr.length(); i++) {
 		if (i % 2 == 0) {
 			if (i % 20 == 0) {

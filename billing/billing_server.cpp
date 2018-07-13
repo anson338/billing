@@ -50,7 +50,7 @@ void BillingServer::stop()
 		if (ec) {
 			throw std::exception(ec.message().c_str());
 		}
-		string command = "stop";
+		vector<char> command(4,(char)0x0);
 		socket.write_some(asio::buffer(command), ec); 
 		if (ec) {
 			throw std::exception(ec.message().c_str());

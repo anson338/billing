@@ -58,7 +58,7 @@ void ClientConnection::readFromClient()
 #ifdef OPEN_SERVER_DEBUG
 	Logger::write("read client start");
 #endif
-	auto request = std::make_shared<string>();
+	auto request = std::make_shared<vector<char>>();
 	request->resize(260);
 	auto selfPointer(shared_from_this());
 	socket.async_receive(
@@ -86,41 +86,36 @@ void ClientConnection::readFromClient()
 
 }
 
-void ClientConnection::processRequest(std::shared_ptr<string> request, std::size_t size)
+void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std::size_t size)
 {
 #ifdef OPEN_SERVER_DEBUG
-	Logger::write(string("request data[length:") + std::to_string(size) + "]\r\n<<" + *request + ">>");
-	string requestStr;
-	charsToHex(request->c_str(), requestStr);
-	std::size_t hexLength = requestStr.length(), i;
-	string hexDebug(29, '=');
-	for (i = 0; i < hexLength; i++) {
-		if (i % 2 == 0) {
-			if (i % 20 == 0) {
-				hexDebug += "\r\n";
-			}
-			else {
-				hexDebug += " ";
-			}
-		}
-		hexDebug.append(1, requestStr[i]);
-	}
-	hexDebug += "\r\n";
-	hexDebug += string(29, '=');
-	Logger::write(hexDebug);
+	Logger::write(string("request data[length:") + std::to_string(size) + "]");
+	string requestHexDebug;
+	bytesToHexDebug(*request, requestHexDebug);
+	Logger::write(requestHexDebug);
 #endif
 	//判断是否为命令
-	if (request->compare("stop") == 0) {
-		this->server->stopMask = true;
-		cout << "get command : stop" << endl;
-		this->server->ioService.stop();
-		return;
+	if (request->size()==4) {
+		string commandHex;
+		bytesToHex(*request, commandHex);
+		//close命令
+		if (commandHex.compare("00000000") == 0) {
+			this->server->stopMask = true;
+			cout << "get command : stop" << endl;
+			this->server->ioService.stop();
+			return;
+		}
 	}
 	BillingData requestData(request);
-	unsigned char requestType = requestData.getPayloadType();
-	auto it = server->handlers.find(requestType);
-	if (it != server->handlers.end()) {
-		this->processRequest((*it).second, requestData);
+	if (requestData.isDataValid()) {
+		unsigned char requestType = requestData.getPayloadType();
+		auto it = server->handlers.find(requestType);
+		if (it != server->handlers.end()) {
+			this->processRequest((*it).second, requestData);
+		}
+	}
+	else {
+		cout << "not valid BillingData" << endl;
 	}
 }
 
@@ -137,15 +132,17 @@ void ClientConnection::processRequest(std::shared_ptr<RequestHandler> handler, B
 #ifdef OPEN_SERVER_DEBUG
 		Logger::write("write client start");
 #endif
-		string resp;
+		vector<char> resp;
 		responseData.packData(resp);
 		socket.async_send(
 			asio::buffer(resp),
-			[this, selfPointer, resp](const asio::error_code& error, std::size_t size) {
+			[this, selfPointer, &resp](const asio::error_code& error, std::size_t size) {
 
 #ifdef OPEN_SERVER_DEBUG
 			Logger::write("write client end");
-			Logger::write(string("response data\r\n") + resp);
+			string hexStr;
+			bytesToHex(resp,hexStr);
+			Logger::write(string("response data\r\n") + hexStr);
 #endif
 			this->writeHandler(error, size);
 		}

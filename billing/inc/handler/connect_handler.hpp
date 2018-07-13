@@ -21,7 +21,7 @@ ConnectHandler::~ConnectHandler()
 void ConnectHandler::processRequest(BillingData& requestData, BillingData& responseData) {
 	responseData.setPayloadType(requestData.getPayloadType());
 	responseData.setId(requestData.getId());
-	string payloadData;
-	hexToChars("2000", payloadData);
-	requestData.setPayloadData(payloadData.c_str());
+	vector<char> payloadData;
+	hexToBytes("2000", payloadData);
+	requestData.setPayloadData(payloadData);
 }

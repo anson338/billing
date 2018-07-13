@@ -5,6 +5,8 @@
 using asio::ip::tcp;
 #include "request_handler.hpp"
 #include "billing_data.hpp"
+#include <vector>
+using std::vector;
 
 class BillingServer;
 
@@ -21,6 +23,6 @@ private:
 	BillingServer * server;
 	tcp::socket socket;
 	void readFromClient();
-	void processRequest(std::shared_ptr<string> request, std::size_t size);
+	void processRequest(std::shared_ptr<vector<char>> request, std::size_t size);
 	void processRequest(std::shared_ptr<RequestHandler> handler, BillingData & requestData);
 };
