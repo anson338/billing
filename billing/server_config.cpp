@@ -14,6 +14,7 @@ ServerConfig::ServerConfig()
 	const  string defaultDbUser = "root";
 	const  string defaultDbPassword = "root";
 	const  string defaultDbName = "web";
+	const std::set<string> defaultAllowIps;
 	try {
 		std::ifstream inFile(SERVER_CONFIG_FILE);
 		json config;
@@ -22,17 +23,18 @@ ServerConfig::ServerConfig()
 		this->ip = config.value("ip", defaultIp);
 		this->port = config.value("port", defaultPort);
 		this->dbHost = config.value("db_host", defaultDbHost);
-		this->dbPort = config.value("db_host", defaultDbPort);
-		this->dbUser = config.value("db_host", defaultDbUser);
-		this->dbPassword = config.value("db_host", defaultDbPassword);
-		this->dbName = config.value("db_host", defaultDbName);
+		this->dbPort = config.value("db_port", defaultDbPort);
+		this->dbUser = config.value("db_user", defaultDbUser);
+		this->dbPassword = config.value("db_password", defaultDbPassword);
+		this->dbName = config.value("db_name", defaultDbName);
+		this->allowIps = config.value("allow_ips", defaultAllowIps);
 #ifdef OPEN_SERVER_DEBUG
 		Logger::write(string("load config file ") + SERVER_CONFIG_FILE + " ok !");
 #endif //OPEN_SERVER_DEBUG
 	}
-	catch (const std::exception&) {
+	catch (const std::exception& e) {
 #ifdef OPEN_SERVER_DEBUG
-		Logger::write(string("load config file ") + SERVER_CONFIG_FILE + " failed !");
+		Logger::write(string("load config file ") + SERVER_CONFIG_FILE + " failed: " + string(e.what()));
 #endif //OPEN_SERVER_DEBUG
 		this->ip = defaultIp;
 		this->port = defaultPort;
@@ -41,6 +43,7 @@ ServerConfig::ServerConfig()
 		this->dbUser = defaultDbUser;
 		this->dbPassword = defaultDbPassword;
 		this->dbName = defaultDbName;
+		this->allowIps = defaultAllowIps;
 	}
 }
 

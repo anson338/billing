@@ -1,4 +1,10 @@
 {
-  "ip": "127.0.0.1",
-  "port": 5000
+  "ip": "192.168.200.1",
+  "port": 12680,
+  "db_host": "localhost",
+  "db_port": 3306,
+  "db_user": "root",
+  "db_password": "root",
+  "db_name": "web",
+  "allow_ips": []
 }

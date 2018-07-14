@@ -80,6 +80,10 @@ void BillingData::packData(vector<char>& buff)
 void BillingData::doDump(string& debug)
 {
 	debug.clear();
+	if (!this->isValid) {
+		debug.append("[not valid]");
+		return;
+	}
 	debug.append("{\r\nisValid: ").append(this->isValid ? "true" : "false").append(",\r\n");
 	debug.append("payloadLength: ").append(std::to_string(this->payloadLength)).append(",\r\n");
 	vector<char> payloadTypeBytes(1, this->payloadType);

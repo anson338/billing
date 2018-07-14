@@ -4,6 +4,7 @@
 #include "inc/hex_tool.hpp"
 using std::cout;
 using std::endl;
+#include <set>
 
 ClientConnection::ClientConnection(BillingServer * s, asio::io_service& io) :server(s), socket(io) {
 #ifdef OPEN_SERVER_DEBUG
@@ -36,6 +37,20 @@ void ClientConnection::acceptHandler(const asio::error_code & error)
 #endif
 	}
 	else {
+#ifdef OPEN_SERVER_DEBUG
+#endif
+		string clientIp = socket.remote_endpoint().address().to_string();
+		std::set<string> allowIps = this->server->config.getAllowIps();
+		if (!allowIps.empty()) {
+			//判断IP是否在白名单内
+			if (allowIps.find(clientIp) == allowIps.end()) {
+				socket.close();
+#ifdef OPEN_SERVER_DEBUG
+				Logger::write(string("ip: ") + clientIp + " is not allowed to connect to billing server");
+#endif
+				return;
+			}
+		}
 		socket.set_option(asio::socket_base::keep_alive(true));
 		this->readFromClient();
 	}
@@ -77,8 +92,10 @@ void ClientConnection::readFromClient()
 			//开启下一次读取
 			this->readFromClient();
 			if (size > 0) {
-				//移除尾部多余空间
-				request->resize(size);
+				if (size < request->capacity()) {
+					//移除尾部多余空间
+					request->resize(size);
+				}
 				this->processRequest(request, size);
 			}
 		}
@@ -100,9 +117,19 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 		bytesToHex(*request, commandHex);
 		//close命令
 		if (commandHex.compare("00000000") == 0) {
-			this->server->stopMask = true;
-			cout << "get command : stop" << endl;
-			this->server->ioService.stop();
+			//响应close命令
+			auto selfPointer(shared_from_this());
+			asio::async_write(socket,
+				asio::buffer(*request),
+				[this, selfPointer](const asio::error_code& error, std::size_t size) {
+				if (!error) {
+					//
+					this->server->stopMask = true;
+					cout << "get command : stop" << endl;
+					this->server->ioService.stop();
+				}
+				this->writeHandler(error, size);
+			});
 			return;
 		}
 	}
@@ -147,12 +174,11 @@ void ClientConnection::processRequest(std::shared_ptr<RequestHandler> handler, B
 		responseData.packData(*resp);
 #ifdef OPEN_SERVER_DEBUG
 		string hexStr;
-		bytesToHexDebug(*resp, hexStr);
-		Logger::write(string("response data\r\n") + hexStr);
+		Logger::write(string("response billing data\r\n") + hexStr);
 		responseData.doDump(debugStr);
 		Logger::write(debugStr);
 #endif
-		socket.async_send(
+		asio::async_write(socket,
 			asio::buffer(*resp),
 			[this, selfPointer, resp](const asio::error_code& error, std::size_t size) {
 
