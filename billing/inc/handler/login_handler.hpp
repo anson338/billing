@@ -28,11 +28,6 @@ LoginHandler::~LoginHandler()
 #endif //OPEN_SERVER_DEBUG
 }
 void LoginHandler::processRequest(BillingData& requestData, BillingData& responseData) {
-#ifdef OPEN_SERVER_DEBUG
-	string debugStr;
-	requestData.doDump(debugStr);
-	Logger::write(debugStr);
-#endif //OPEN_SERVER_DEBUG
 	responseData.setPayloadType(requestData.getPayloadType());
 	responseData.setId(requestData.getId());
 	auto payloadData = requestData.getPayloadData();

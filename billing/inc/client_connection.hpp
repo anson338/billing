@@ -10,7 +10,7 @@ using std::vector;
 
 class BillingServer;
 
-class ClientConnection: public std::enable_shared_from_this<ClientConnection>
+class ClientConnection : public std::enable_shared_from_this<ClientConnection>
 {
 public:
 	ClientConnection(BillingServer* s, asio::io_service& io);
@@ -25,4 +25,9 @@ private:
 	void readFromClient();
 	void processRequest(std::shared_ptr<vector<char>> request, std::size_t size);
 	void processRequest(std::shared_ptr<RequestHandler> handler, BillingData& requestData);
+#ifdef OPEN_SERVER_DEBUG
+#ifdef OPEN_PROXY_DEBUG
+	void callProxyServer(std::shared_ptr<vector<char>> request, BillingData& requestData);
+#endif
+#endif
 };

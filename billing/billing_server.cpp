@@ -3,8 +3,11 @@
 #include <iostream>
 #include "inc/handler/connect_handler.hpp"
 #include "inc/handler/login_handler.hpp"
+#include "inc/handler/logout_handler.hpp"
 #include "inc/handler/ping_handler.hpp"
 #include "inc/handler/kick_handler.hpp"
+#include "inc/handler/enter_game_handler.hpp"
+#include "inc/handler/check_point_handler.hpp"
 using std::cout;
 using std::endl;
 #ifdef OPEN_SERVER_DEBUG
@@ -81,7 +84,10 @@ void BillingServer::run()
 		this->handlers[0xa0] = std::make_shared<ConnectHandler>(*mysql);
 		this->handlers[0xa1] = std::make_shared<PingHandler>(*mysql);
 		this->handlers[0xa2] = std::make_shared<LoginHandler>(*mysql);
+		this->handlers[0xa3] = std::make_shared<EnterGameHandler>(*mysql);
+		this->handlers[0xa4] = std::make_shared<LogoutHandler>(*mysql);
 		this->handlers[0xa9] = std::make_shared<KickHandler>(*mysql);
+		this->handlers[0xe2] = std::make_shared<CheckPointHandler>(*mysql);
 		this->startAccept();
 		ioService.run();
 	}
@@ -202,20 +208,23 @@ void BillingServer::sendClientRequest(tcp::socket& socket, std::vector<char>& da
 			respHandler(socket, nullptr, ec);
 			return;
 		}
-		auto response = std::make_shared<std::vector<char>>();
-		response->resize(260);
-		socket.async_receive(asio::buffer(*response), [response, &socket, respHandler](const asio::error_code& ec1, std::size_t responseSize) {
-			if (ec1) {
-				respHandler(socket, nullptr, ec1);
-				return;
-			}
-			else {
-				if (responseSize < response->capacity()) {
-					//ÒÆ³ýÎ²²¿¶àÓà¿Õ¼ä
-					response->resize(responseSize);
+		if (respHandler) {
+			//
+			auto response = std::make_shared<std::vector<char>>(260);
+			socket.async_receive(asio::buffer(*response), [response, &socket, respHandler](const asio::error_code& ec1, std::size_t responseSize) {
+				if (ec1) {
+					respHandler(socket, nullptr, ec1);
+					return;
 				}
-				respHandler(socket, response, ec1);
-			}
-		});
+				else {
+					if (responseSize < response->capacity()) {
+						//ÒÆ³ýÎ²²¿¶àÓà¿Õ¼ä
+						response->resize(responseSize);
+					}
+					respHandler(socket, response, ec1);
+				}
+			});
+			//
+		}
 	});
 }

@@ -131,37 +131,18 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 	if (requestData.isDataValid()) {
 
 		unsigned char requestType = requestData.getPayloadType();
+		string hexStr;
+		vector<char> payloadTypeBytes(1, requestType);
+		bytesToHex(payloadTypeBytes, hexStr);
 		auto it = server->handlers.find(requestType);
 		if (it != server->handlers.end()) {
 			this->processRequest((*it).second, requestData);
 		}
 		else {
-			string hexStr;
-			vector<char> payloadTypeBytes(1, requestType);
-			bytesToHex(payloadTypeBytes, hexStr);
 			cout << "[error]unkown BillingData type: 0x" << hexStr << endl;
 #ifdef OPEN_SERVER_DEBUG
 #ifdef OPEN_PROXY_DEBUG
-			string proxyDebugStr;
-			requestData.doDump(proxyDebugStr);
-			Logger::write("===send data to proxy===");
-			Logger::write(proxyDebugStr);
-			this->server->sendClientRequest(*(this->server->proxySocket), *request, [](tcp::socket& client, std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
-				if (ec) {
-					cout << "send proxy data failed: " << ec.message() << endl;
-				}
-				else {
-					Logger::write("===get proxy data===");
-					BillingData proxyData(*response);
-					string proxyDebugStr1;
-					proxyData.doDump(proxyDebugStr1);
-					Logger::write(proxyDebugStr1);
-					Logger::write("===full data========");
-					bytesToHexDebug(*response, proxyDebugStr1);
-					Logger::write(proxyDebugStr1);
-					Logger::write("===end proxy data===");
-				}
-			});
+			this->callProxyServer(request, requestData);
 #endif
 #endif
 		}
@@ -186,3 +167,30 @@ void ClientConnection::processRequest(std::shared_ptr<RequestHandler> handler, B
 		});
 	}
 }
+
+#ifdef OPEN_SERVER_DEBUG
+#ifdef OPEN_PROXY_DEBUG
+void ClientConnection::callProxyServer(std::shared_ptr<vector<char>> request, BillingData& requestData) {
+	string proxyDebugStr;
+	requestData.doDump(proxyDebugStr);
+	Logger::write("===send data to proxy===");
+	Logger::write(proxyDebugStr);
+	this->server->sendClientRequest(*(this->server->proxySocket), *request, [](tcp::socket& client, std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
+		if (ec) {
+			cout << "send proxy data failed: " << ec.message() << endl;
+		}
+		else {
+			Logger::write("===get proxy data===");
+			BillingData proxyData(*response);
+			string proxyDebugStr1;
+			proxyData.doDump(proxyDebugStr1);
+			Logger::write(proxyDebugStr1);
+			Logger::write("===full data========");
+			bytesToHexDebug(*response, proxyDebugStr1);
+			Logger::write(proxyDebugStr1);
+			Logger::write("===end proxy data===");
+		}
+	});
+}
+#endif
+#endif
