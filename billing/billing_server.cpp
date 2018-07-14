@@ -2,6 +2,9 @@
 #include "inc/client_connection.hpp"
 #include <iostream>
 #include "inc/handler/connect_handler.hpp"
+#include "inc/handler/login_handler.hpp"
+#include "inc/handler/ping_handler.hpp"
+#include "inc/handler/kick_handler.hpp"
 using std::cout;
 using std::endl;
 #ifdef OPEN_SERVER_DEBUG
@@ -24,6 +27,25 @@ BillingServer::BillingServer() :serverEndpoint(
 {
 #ifdef OPEN_SERVER_DEBUG
 	Logger::write("billing server constrcut");
+#ifdef OPEN_PROXY_DEBUG
+	Logger::write("prepare to connect to proxy server");
+	auto proxyEndpoint = std::make_shared<tcp::endpoint>(
+		asio::ip::address::from_string(PROXY_DEBUG_IP),
+		PROXY_DEBUG_PORT
+		);
+	proxySocket = std::make_shared<tcp::socket>(ioService);
+	proxySocket->async_connect(*proxyEndpoint, [this](const asio::error_code& error) {
+		this->proxySocket->set_option(asio::socket_base::keep_alive(true));
+		if (error) {
+			this->proxySocket->close();
+			this->proxySocket = nullptr;
+			cout << "connect to proxy failed: " << error.message() << endl;
+		}
+		else {
+			Logger::write("connect to proxy server success");
+		}
+	});
+#endif //OPEN_PROXY_DEBUG
 #endif //OPEN_SERVER_DEBUG
 }
 
@@ -42,6 +64,11 @@ BillingServer::~BillingServer()
 		mysql_close(mysql.get());
 	}
 #ifdef OPEN_SERVER_DEBUG
+#ifdef OPEN_PROXY_DEBUG
+	if (!this->proxySocket) {
+		this->proxySocket->close();
+	}
+#endif
 	Logger::write("billing server destrcut");
 #endif //OPEN_SERVER_DEBUG
 }
@@ -52,6 +79,9 @@ void BillingServer::run()
 	if (this->testConnect()) {
 		//加载handler
 		this->handlers[0xa0] = std::make_shared<ConnectHandler>(*mysql);
+		this->handlers[0xa1] = std::make_shared<PingHandler>(*mysql);
+		this->handlers[0xa2] = std::make_shared<LoginHandler>(*mysql);
+		this->handlers[0xa9] = std::make_shared<KickHandler>(*mysql);
 		this->startAccept();
 		ioService.run();
 	}
@@ -82,47 +112,47 @@ void BillingServer::stop()
 
 #ifdef OPEN_SERVER_DEBUG
 void BillingServer::sendTestData() {
-		BillingData testData;
-		vector<char> idArr;
-		idArr.emplace_back('a');
-		idArr.emplace_back('b');
-		testData.setId(idArr);
-		testData.setPayloadType(0xa0);
-		testData.setPayloadData("000000"
-			"650d3139322e3136382e3230302e33");
-		vector<char> sendData;
-		testData.packData(sendData);
-		string debugStr;
-		testData.doDump(debugStr);
-		cout << debugStr << endl;
-		tcp::socket clientSocket(ioService);
-		clientSocket.async_connect(serverEndpoint, [this, &clientSocket, &sendData](const asio::error_code& error) {
-			clientSocket.set_option(asio::socket_base::keep_alive(true));
-			if (error) {
-				clientSocket.close();
-				cout << "connect failed: " << error.message() << endl;
-				return;
+	BillingData testData;
+	vector<char> idArr;
+	idArr.emplace_back('a');
+	idArr.emplace_back('b');
+	testData.setId(idArr);
+	testData.setPayloadType(0xa0);
+	testData.setPayloadData("000000"
+		"650d3139322e3136382e3230302e33");
+	vector<char> sendData;
+	testData.packData(sendData);
+	string debugStr;
+	testData.doDump(debugStr);
+	cout << debugStr << endl;
+	tcp::socket clientSocket(ioService);
+	clientSocket.async_connect(serverEndpoint, [this, &clientSocket, &sendData](const asio::error_code& error) {
+		clientSocket.set_option(asio::socket_base::keep_alive(true));
+		if (error) {
+			clientSocket.close();
+			cout << "connect failed: " << error.message() << endl;
+			return;
+		}
+		this->sendClientRequest(clientSocket, sendData, [](tcp::socket& client, std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
+			if (!ec) {
+				Logger::write("get response");
+				string debugStr;
+				BillingData responseData(*response);
+				responseData.doDump(debugStr);
+				Logger::write(debugStr);
 			}
-			this->sendClientRequest(clientSocket, sendData, [](tcp::socket& client, std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
-				if (!ec) {
-					Logger::write("get response");
-					string debugStr;
-					BillingData responseData(*response);
-					responseData.doDump(debugStr);
-					Logger::write(debugStr);
-				}
-				else if (ec == asio::error::eof) {
-					//读取完毕
-					Logger::write("read completely");
-				}
-				else {
-					// Some other error.
-					Logger::write(string("some eror: ") + ec.message());
-				}
-				client.close();
-			});
+			else if (ec == asio::error::eof) {
+				//读取完毕
+				Logger::write("read completely");
+			}
+			else {
+				// Some other error.
+				Logger::write(string("some eror: ") + ec.message());
+			}
+			client.close();
 		});
-		ioService.run();
+	});
+	ioService.run();
 }
 #endif
 

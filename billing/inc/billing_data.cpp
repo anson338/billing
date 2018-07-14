@@ -27,8 +27,8 @@ BillingData::BillingData(const vector<char>& request) :isValid(true)
 	}
 	if (this->isValid) {
 		unsigned short len0, len1;
-		len0 = (unsigned short)request.at(2);
-		len1 = (unsigned short)request.at(3);
+		len0 = (unsigned char)request.at(2);
+		len1 = (unsigned char)request.at(3);
 		this->payloadLength = (len0 << 8) + len1;
 		this->payloadType = (unsigned char)request.at(4);
 		this->id.emplace_back(request.at(5));
@@ -62,11 +62,11 @@ void BillingData::packData(vector<char>& buff)
 	hexToBytes("AA55", maskBuff);
 	buff.emplace_back(maskBuff[0]);
 	buff.emplace_back(maskBuff[1]);
-	unsigned short len0, len1;
-	len0 = this->payloadLength >> 8;
-	len1 = this->payloadLength & 0xff;
-	buff.emplace_back((unsigned char)len0);
-	buff.emplace_back((unsigned char)len1);
+	unsigned char len0, len1;
+	len0 = (unsigned char)(this->payloadLength >> 8);
+	len1 = (unsigned char)(this->payloadLength & 0xff);
+	buff.emplace_back(len0);
+	buff.emplace_back(len1);
 	buff.emplace_back(this->payloadType);
 	buff.emplace_back(this->id[0]);
 	buff.emplace_back(this->id[1]);

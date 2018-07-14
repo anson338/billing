@@ -33,4 +33,7 @@ private:
 	bool testConnect();
 	std::map<unsigned char, std::shared_ptr<RequestHandler>> handlers;
 	void sendClientRequest(tcp::socket& socket, std::vector<char>& dataBytes,reqHandler respHandler);
+#ifdef OPEN_SERVER_DEBUG
+	std::shared_ptr<tcp::socket> proxySocket;
+#endif
 };

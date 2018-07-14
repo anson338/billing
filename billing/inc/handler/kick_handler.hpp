@@ -4,32 +4,32 @@
 #include "../billing_data.hpp"
 #include <mysql.h>
 
-//0xA0
-class ConnectHandler:public RequestHandler
+//0xA9
+class KickHandler:public RequestHandler
 {
 public:
-	ConnectHandler(MYSQL& mysqlHandler) :RequestHandler(mysqlHandler) {
+	KickHandler(MYSQL& mysqlHandler) :RequestHandler(mysqlHandler) {
 #ifdef OPEN_SERVER_DEBUG
-		Logger::write("ConnectHandler construct");
+		Logger::write("KickHandler construct");
 #endif //OPEN_SERVER_DEBUG
 	}
-	~ConnectHandler();
+	~KickHandler();
 	void processRequest(BillingData& requestData, BillingData& responseData);
 private:
 
 };
 
-ConnectHandler::~ConnectHandler()
+KickHandler::~KickHandler()
 {
 #ifdef OPEN_SERVER_DEBUG
-	Logger::write("ConnectHandler destrcut");
+	Logger::write("KickHandler destrcut");
 #endif //OPEN_SERVER_DEBUG
 }
-void ConnectHandler::processRequest(BillingData& requestData, BillingData& responseData) {
+void KickHandler::processRequest(BillingData& requestData, BillingData& responseData) {
 #ifdef OPEN_SERVER_DEBUG
-	Logger::write("ConnectHandler::processRequest");
+	Logger::write("KickHandler::processRequest=>StartUpKick");
 #endif //OPEN_SERVER_DEBUG
 	responseData.setPayloadType(requestData.getPayloadType());
 	responseData.setId(requestData.getId());
-	responseData.setPayloadData("2000");
+	responseData.setPayloadData("01");
 }

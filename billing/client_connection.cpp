@@ -70,18 +70,12 @@ void ClientConnection::readFromClient()
 	if (this->server->stopMask) {
 		cout << "stop server read" << endl;
 	}
-#ifdef OPEN_SERVER_DEBUG
-	Logger::write("read client start");
-#endif
-	auto request = std::make_shared<vector<char>>();
+	auto request = std::make_shared<vector<char>>(260);
 	request->resize(260);
 	auto selfPointer(shared_from_this());
 	socket.async_receive(
 		asio::buffer(*request),
 		[this, selfPointer, request](const asio::error_code& error, std::size_t size) {
-#ifdef OPEN_SERVER_DEBUG
-		Logger::write("read client end");
-#endif
 		//读取错误
 		if (error) {
 #ifdef OPEN_SERVER_DEBUG
@@ -96,6 +90,12 @@ void ClientConnection::readFromClient()
 					//移除尾部多余空间
 					request->resize(size);
 				}
+#ifdef OPEN_SERVER_DEBUG
+				//string inputDebugStr;
+				//bytesToHexDebug(*request, inputDebugStr);
+				//Logger::write("client request");
+				//Logger::write(inputDebugStr);
+#endif
 				this->processRequest(request, size);
 			}
 		}
@@ -105,12 +105,6 @@ void ClientConnection::readFromClient()
 
 void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std::size_t size)
 {
-#ifdef OPEN_SERVER_DEBUG
-	Logger::write(string("request data[length:") + std::to_string(size) + "]");
-	string requestHexDebug;
-	bytesToHexDebug(*request, requestHexDebug);
-	Logger::write(requestHexDebug);
-#endif
 	//判断是否为命令
 	if (request->size() == 4) {
 		string commandHex;
@@ -135,19 +129,41 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 	}
 	BillingData requestData(*request);
 	if (requestData.isDataValid()) {
+
 		unsigned char requestType = requestData.getPayloadType();
 		auto it = server->handlers.find(requestType);
 		if (it != server->handlers.end()) {
 			this->processRequest((*it).second, requestData);
 		}
 		else {
-			vector<char> payloadTypeBytes(1, requestType);
 			string hexStr;
+			vector<char> payloadTypeBytes(1, requestType);
 			bytesToHex(payloadTypeBytes, hexStr);
 			cout << "[error]unkown BillingData type: 0x" << hexStr << endl;
-			string debugStr;
-			requestData.doDump(debugStr);
-			cout << debugStr << endl;
+#ifdef OPEN_SERVER_DEBUG
+#ifdef OPEN_PROXY_DEBUG
+			string proxyDebugStr;
+			requestData.doDump(proxyDebugStr);
+			Logger::write("===send data to proxy===");
+			Logger::write(proxyDebugStr);
+			this->server->sendClientRequest(*(this->server->proxySocket), *request, [](tcp::socket& client, std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
+				if (ec) {
+					cout << "send proxy data failed: " << ec.message() << endl;
+				}
+				else {
+					Logger::write("===get proxy data===");
+					BillingData proxyData(*response);
+					string proxyDebugStr1;
+					proxyData.doDump(proxyDebugStr1);
+					Logger::write(proxyDebugStr1);
+					Logger::write("===full data========");
+					bytesToHexDebug(*response, proxyDebugStr1);
+					Logger::write(proxyDebugStr1);
+					Logger::write("===end proxy data===");
+				}
+			});
+#endif
+#endif
 		}
 	}
 	else {
@@ -157,36 +173,16 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 
 void ClientConnection::processRequest(std::shared_ptr<RequestHandler> handler, BillingData & requestData)
 {
-#ifdef OPEN_SERVER_DEBUG
-	Logger::write("request billing data");
-	string debugStr;
-	requestData.doDump(debugStr);
-	Logger::write(debugStr);
-#endif
 	BillingData responseData;
 	handler->processRequest(requestData, responseData);
 	if (responseData.isDataValid()) {
 		auto selfPointer(shared_from_this());
-#ifdef OPEN_SERVER_DEBUG
-		Logger::write("write client start");
-#endif
 		auto resp = std::make_shared<vector<char>>();
 		responseData.packData(*resp);
-#ifdef OPEN_SERVER_DEBUG
-		string hexStr;
-		Logger::write(string("response billing data\r\n") + hexStr);
-		responseData.doDump(debugStr);
-		Logger::write(debugStr);
-#endif
 		asio::async_write(socket,
 			asio::buffer(*resp),
 			[this, selfPointer, resp](const asio::error_code& error, std::size_t size) {
-
-#ifdef OPEN_SERVER_DEBUG
-			Logger::write("write client end");
-#endif
 			this->writeHandler(error, size);
-		}
-		);
+		});
 	}
 }

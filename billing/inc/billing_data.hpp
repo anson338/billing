@@ -47,6 +47,18 @@ public:
 		this->appendPayloadData(data);
 	}
 
+	void appendText(string text) {
+		for (auto it = text.begin(); it != text.end(); it++) {
+			this->payloadData.emplace_back(*it);
+		}
+		this->payloadLength = (unsigned short)this->payloadData.size() + 3;
+	}
+
+	void appendChar(unsigned char charItem) {
+		this->payloadData.emplace_back(charItem);
+		this->payloadLength = (unsigned short)this->payloadData.size() + 3;
+	}
+
 	const vector<char>& getId() {
 		return this->id;
 	}
