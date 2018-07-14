@@ -12,7 +12,7 @@ using asio::ip::tcp;
 class BillingServer
 {
 public:
-	typedef void(*reqHandler)(std::shared_ptr<std::vector<char>> response);
+	typedef void(*reqHandler)(tcp::socket& client,std::shared_ptr<std::vector<char>> response, const asio::error_code& ec);
 	BillingServer();
 	BillingServer(bool mask);
 	~BillingServer();
@@ -32,6 +32,5 @@ private:
 	void startAccept();
 	bool testConnect();
 	std::map<unsigned char, std::shared_ptr<RequestHandler>> handlers;
-	void BillingServer::syncConnect(tcp::endpoint& remotePoint, tcp::socket& socket, asio::error_code& ec);
-	void sendClientRequest(tcp::socket& socket, asio::error_code& ec,std::vector<char>& dataBytes, reqHandler respHandler);
+	void sendClientRequest(tcp::socket& socket, std::vector<char>& dataBytes,reqHandler respHandler);
 };

@@ -1,14 +1,13 @@
 #pragma once
 #include <string>
 using std::string;
-#include <memory>
 #include <vector>
 #include "hex_tool.hpp"
 using std::vector;
 class BillingData
 {
 public:
-	BillingData(std::shared_ptr<vector<char>> request);
+	BillingData(const vector<char>& request);
 	BillingData();
 	~BillingData();
 	const unsigned char& getPayloadType() {

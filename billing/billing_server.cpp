@@ -59,63 +59,70 @@ void BillingServer::run()
 void BillingServer::stop()
 {
 	tcp::socket clientSocket(ioService);
-	asio::error_code ec;
-	this->syncConnect(serverEndpoint, clientSocket, ec);
-	if (ec) {
-		cout << "send \"stop\" command failed: " << ec.message() << endl;
-		return;
-	}
-	vector<char> command(4, (char)0x0);
-	this->sendClientRequest(clientSocket, ec, command, [](std::shared_ptr<vector<char>> response) {
+	vector<char> sendData(4, (char)0x0);
+	clientSocket.async_connect(serverEndpoint, [this, &clientSocket, &sendData](const asio::error_code& error) {
+		clientSocket.set_option(asio::socket_base::keep_alive(true));
+		if (error) {
+			clientSocket.close();
+			cout << "connect failed: " << error.message() << endl;
+			return;
+		}
+		this->sendClientRequest(clientSocket, sendData, [](tcp::socket& client, std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
+			if (ec) {
+				cout << "send \"stop\" command failed: " << ec.message() << endl;
+			}
+			else {
+				cout << "send \"stop\" command ok" << endl;
+			}
+			client.close();
+		});
 	});
-	if (ec) {
-		cout << "send \"stop\" command failed: " << ec.message() << endl;
-	}
-	else {
-		cout << "send \"stop\" command ok" << endl;
-	}
-
+	ioService.run();
 }
 
 #ifdef OPEN_SERVER_DEBUG
 void BillingServer::sendTestData() {
-	BillingData testData;
-	vector<char> idArr;
-	idArr.emplace_back('a');
-	idArr.emplace_back('b');
-	testData.setId(idArr);
-	testData.setPayloadType(0xa0);
-	testData.setPayloadData("000000"
-		"650d3139322e3136382e3230302e33");
-	vector<char> sendData;
-	testData.packData(sendData);
-	string debugStr;
-	testData.doDump(debugStr);
-	cout << debugStr << endl;
-	tcp::socket clientSocket(ioService);
-	asio::error_code ec;
-	this->syncConnect(serverEndpoint, clientSocket, ec);
-	if (ec) {
-		cout << "sync connect failed: " << ec.message() << endl;
-		return;
-	}
-	this->sendClientRequest(clientSocket, ec, sendData, [](std::shared_ptr<vector<char>> response) {
-		Logger::write("get response");
-		BillingData responseData(response);
+		BillingData testData;
+		vector<char> idArr;
+		idArr.emplace_back('a');
+		idArr.emplace_back('b');
+		testData.setId(idArr);
+		testData.setPayloadType(0xa0);
+		testData.setPayloadData("000000"
+			"650d3139322e3136382e3230302e33");
+		vector<char> sendData;
+		testData.packData(sendData);
 		string debugStr;
-		responseData.doDump(debugStr);
-		Logger::write(debugStr);
-	});
-	if (ec) {
-		if (ec == asio::error::eof) {
-			//读取完毕
-			Logger::write("read completely");
-		}
-		else {
-			// Some other error.
-			Logger::write(string("some eror: ") + ec.message());
-		}
-	}
+		testData.doDump(debugStr);
+		cout << debugStr << endl;
+		tcp::socket clientSocket(ioService);
+		clientSocket.async_connect(serverEndpoint, [this, &clientSocket, &sendData](const asio::error_code& error) {
+			clientSocket.set_option(asio::socket_base::keep_alive(true));
+			if (error) {
+				clientSocket.close();
+				cout << "connect failed: " << error.message() << endl;
+				return;
+			}
+			this->sendClientRequest(clientSocket, sendData, [](tcp::socket& client, std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
+				if (!ec) {
+					Logger::write("get response");
+					string debugStr;
+					BillingData responseData(*response);
+					responseData.doDump(debugStr);
+					Logger::write(debugStr);
+				}
+				else if (ec == asio::error::eof) {
+					//读取完毕
+					Logger::write("read completely");
+				}
+				else {
+					// Some other error.
+					Logger::write(string("some eror: ") + ec.message());
+				}
+				client.close();
+			});
+		});
+		ioService.run();
 }
 #endif
 
@@ -159,34 +166,26 @@ bool BillingServer::testConnect()
 	}
 }
 
-void BillingServer::syncConnect(tcp::endpoint& remotePoint, tcp::socket& socket, asio::error_code& ec) {
-	socket.connect(serverEndpoint, ec);
-	if (ec) {
-		return;
-	}
-	socket.set_option(asio::socket_base::keep_alive(true), ec);
-}
-
-void BillingServer::sendClientRequest(tcp::socket& socket, asio::error_code& ec, std::vector<char>& dataBytes, reqHandler respHandler) {
-	asio::write(socket, asio::buffer(dataBytes), ec);
-	if (ec) {
-		return;
-	}
-	if (respHandler) {
-		size_t responseSize = 0;
-		auto response = std::make_shared<std::vector<char>>(260);
-		while (responseSize == 0)
-		{
-			responseSize = socket.read_some(asio::buffer(*response), ec);
-			if (ec) {
+void BillingServer::sendClientRequest(tcp::socket& socket, std::vector<char>& dataBytes, reqHandler respHandler) {
+	asio::async_write(socket, asio::buffer(dataBytes), [&socket, respHandler](const asio::error_code& ec, std::size_t bytes_transferred) {
+		if (ec) {
+			respHandler(socket, nullptr, ec);
+			return;
+		}
+		auto response = std::make_shared<std::vector<char>>();
+		response->resize(260);
+		socket.async_receive(asio::buffer(*response), [response, &socket, respHandler](const asio::error_code& ec1, std::size_t responseSize) {
+			if (ec1) {
+				respHandler(socket, nullptr, ec1);
 				return;
 			}
-		}
-		if (responseSize < response->capacity()) {
-			//移除尾部多余空间
-			response->resize(responseSize);
-		}
-		respHandler(response);
-		socket.close();
-	}
+			else {
+				if (responseSize < response->capacity()) {
+					//移除尾部多余空间
+					response->resize(responseSize);
+				}
+				respHandler(socket, response, ec1);
+			}
+		});
+	});
 }

@@ -2,14 +2,14 @@
 #include "billing_data.hpp"
 #include "hex_tool.hpp"
 
-BillingData::BillingData(std::shared_ptr<vector<char>> request) :isValid(true)
+BillingData::BillingData(const vector<char>& request) :isValid(true)
 {
-	unsigned short requestLength = (unsigned short)request->size();
+	unsigned short requestLength = (unsigned short)request.size();
 	string tmp;
 	vector<char> tmpBytes(2);
 	tmpBytes.clear();
-	tmpBytes.emplace_back(request->at(0));
-	tmpBytes.emplace_back(request->at(1));
+	tmpBytes.emplace_back(request.at(0));
+	tmpBytes.emplace_back(request.at(1));
 	bytesToHex(tmpBytes, tmp);
 	//头部2字节检测
 	if (tmp.compare("AA55") != 0) {
@@ -18,8 +18,8 @@ BillingData::BillingData(std::shared_ptr<vector<char>> request) :isValid(true)
 	if (this->isValid) {
 		//尾部2字节检测
 		tmpBytes.clear();
-		tmpBytes.emplace_back(request->at(requestLength - 2));
-		tmpBytes.emplace_back(request->at(requestLength - 1));
+		tmpBytes.emplace_back(request.at(requestLength - 2));
+		tmpBytes.emplace_back(request.at(requestLength - 1));
 		bytesToHex(tmpBytes, tmp);
 		if (tmp.compare("55AA") != 0) {
 			this->isValid = false;
@@ -27,17 +27,17 @@ BillingData::BillingData(std::shared_ptr<vector<char>> request) :isValid(true)
 	}
 	if (this->isValid) {
 		unsigned short len0, len1;
-		len0 = (unsigned short)request->at(2);
-		len1 = (unsigned short)request->at(3);
+		len0 = (unsigned short)request.at(2);
+		len1 = (unsigned short)request.at(3);
 		this->payloadLength = (len0 << 8) + len1;
-		this->payloadType = (unsigned char)request->at(4);
-		this->id.emplace_back(request->at(5));
-		this->id.emplace_back(request->at(6));
+		this->payloadType = (unsigned char)request.at(4);
+		this->id.emplace_back(request.at(5));
+		this->id.emplace_back(request.at(6));
 		size_t dataCount = this->payloadLength - 3;
 		this->payloadData.resize(dataCount);
 		this->payloadData.clear();
 		for (size_t i = 0; i < dataCount; i++) {
-			this->payloadData.emplace_back(request->at(7 + i));
+			this->payloadData.emplace_back(request.at(7 + i));
 		}
 	}
 }

@@ -133,7 +133,7 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 			return;
 		}
 	}
-	BillingData requestData(request);
+	BillingData requestData(*request);
 	if (requestData.isDataValid()) {
 		unsigned char requestType = requestData.getPayloadType();
 		auto it = server->handlers.find(requestType);
