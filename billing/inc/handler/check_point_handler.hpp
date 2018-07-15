@@ -33,7 +33,7 @@ void CheckPointHandler::processRequest(BillingData& requestData, BillingData& re
 	responseData.setId(requestData.getId());
 	auto payloadData = requestData.getPayloadData();
 	size_t offset = 0, i;
-	//»ñÈ¡µÇÂ¼ÓÃ»§Ãû
+	//è·å–ç™»å½•ç”¨æˆ·å
 	unsigned char usernameLength = (unsigned char)payloadData[offset];
 	string username;
 	username.resize(usernameLength);
@@ -42,7 +42,7 @@ void CheckPointHandler::processRequest(BillingData& requestData, BillingData& re
 		offset++;
 		username.append(1, payloadData[offset]);
 	}
-	//µ±Ç°IP
+	//å½“å‰IP
 	offset++;
 	unsigned char ipLength = (unsigned char)payloadData[offset];
 	string loginIp;
@@ -52,7 +52,7 @@ void CheckPointHandler::processRequest(BillingData& requestData, BillingData& re
 		offset++;
 		loginIp.append(1, payloadData[offset]);
 	}
-	//»ñÈ¡µÇÂ¼½ÇÉ«Ãû
+	//è·å–ç™»å½•è§’è‰²å
 	offset++;
 	unsigned char charLength = (unsigned char)payloadData[offset];
 	string charName;

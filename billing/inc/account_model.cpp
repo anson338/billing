@@ -20,23 +20,23 @@ unsigned char AccountModel::getLoginResult(string & username, string & password)
 	AccountInfo accountInfo;
 	this->getAccountInfo(username, accountInfo);
 	if (accountInfo.id == 0) {
-		//ÓÃ»§²»´æÔÚ
+		//ç”¨æˆ·ä¸å­˜åœ¨
 		return 9;
 	}
-	//ÃÜÂëÑéÖ¤
+	//å¯†ç éªŒè¯
 	if (strcmp(accountInfo.password, password.c_str()) != 0) {
-		//ÃÜÂë´íÎó
+		//å¯†ç é”™è¯¯
 		return 3;
 	}
 	if (accountInfo.is_lock != 0) {
-		//Í£È¨
+		//åœæƒ
 		return 7;
 	}
 	if (accountInfo.is_online != 0) {
-		//ÓĞ½ÇÉ«ÔÚÏß
+		//æœ‰è§’è‰²åœ¨çº¿
 		return 4;
 	}
-	//¸üĞÂ×´Ì¬ÎªÔÚÏßÄ£Ê½
+	//æ›´æ–°çŠ¶æ€ä¸ºåœ¨çº¿æ¨¡å¼
 	this->updateOnlineStatus(username, true);
 	return 1;
 }

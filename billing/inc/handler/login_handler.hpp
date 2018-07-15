@@ -33,7 +33,7 @@ void LoginHandler::processRequest(BillingData& requestData, BillingData& respons
 	responseData.setId(requestData.getId());
 	auto payloadData = requestData.getPayloadData();
 	size_t offset = 0, i;
-	//»ñÈ¡µÇÂ¼ÓÃ»§Ãû
+	//è·å–ç™»å½•ç”¨æˆ·å
 	unsigned char usernameLength = (unsigned char)payloadData[offset];
 	string username;
 	username.resize(usernameLength);
@@ -42,7 +42,7 @@ void LoginHandler::processRequest(BillingData& requestData, BillingData& respons
 		offset++;
 		username.append(1, payloadData[offset]);
 	}
-	//»ñÈ¡µÇÂ¼ÃÜÂë
+	//è·å–ç™»å½•å¯†ç 
 	offset++;
 	unsigned char passLength = (unsigned char)payloadData[offset];
 	string password;
@@ -52,7 +52,7 @@ void LoginHandler::processRequest(BillingData& requestData, BillingData& respons
 		offset++;
 		password.append(1, payloadData[offset]);
 	}
-	//µÇÂ¼IP
+	//ç™»å½•IP
 	offset++;
 	unsigned char ipLength = (unsigned char)payloadData[offset];
 	string loginIp;
@@ -64,16 +64,16 @@ void LoginHandler::processRequest(BillingData& requestData, BillingData& respons
 	}
 	unsigned char loginResult = this->accountModel.getLoginResult(username, password);
 	const char* loginResultStr[] = {
-		"-",//0 ÎŞĞ§Öµ
-		"login success",//1 µÇÂ¼³É¹¦
-		"account not exists",//2 ÓÃ»§²»´æÔÚ
-		"password not correct" ,//3 ÃÜÂë´íÎó
-		"account is allready online",//4 ½ÇÉ«ÔÚÏß
-		"account is allready online on other server",//5 ÓĞ½ÇÉ«ÔÚÏßÒÑÔÚÆäËü·şÎñÆ÷µÇÂ¼
-		"connect failed",//6 Á¬½ÓÊ§°Ü,ÇëÉÔºòÔÙÊÔ
-		"account baned",//7 ÕËºÅ±»Í£È¨
-		"point is not available",//8 µãÊı²»¹»?(ÊÕ·ÑÓÎÏ·Ê¹ÓÃ?)
-		"regisiter"//9 ÕËºÅ×¢²áµ¯´°
+		"-",//0 æ— æ•ˆå€¼
+		"login success",//1 ç™»å½•æˆåŠŸ
+		"account not exists",//2 ç”¨æˆ·ä¸å­˜åœ¨
+		"password not correct" ,//3 å¯†ç é”™è¯¯
+		"account is allready online",//4 è§’è‰²åœ¨çº¿
+		"account is allready online on other server",//5 æœ‰è§’è‰²åœ¨çº¿å·²åœ¨å…¶å®ƒæœåŠ¡å™¨ç™»å½•
+		"connect failed",//6 è¿æ¥å¤±è´¥,è¯·ç¨å€™å†è¯•
+		"account baned",//7 è´¦å·è¢«åœæƒ
+		"point is not available",//8 ç‚¹æ•°ä¸å¤Ÿ?(æ”¶è´¹æ¸¸æˆä½¿ç”¨?)
+		"regisiter"//9 è´¦å·æ³¨å†Œå¼¹çª—
 	};
 	cout << "user [" << username << "] try to login from " << loginIp << " : " << loginResultStr[loginResult] << endl;
 	//

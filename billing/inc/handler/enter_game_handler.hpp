@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "../logger.hpp"
 #include "../request_handler.hpp"
 #include "../billing_data.hpp"
@@ -33,7 +33,7 @@ void EnterGameHandler::processRequest(BillingData& requestData, BillingData& res
 	responseData.setId(requestData.getId());
 	auto payloadData = requestData.getPayloadData();
 	size_t offset = 0, i;
-	//»ñÈ¡µÇÂ¼ÓÃ»§Ãû
+	//è·å–ç™»å½•ç”¨æˆ·å
 	unsigned char usernameLength = (unsigned char)payloadData[offset];
 	string username;
 	username.resize(usernameLength);
@@ -42,7 +42,7 @@ void EnterGameHandler::processRequest(BillingData& requestData, BillingData& res
 		offset++;
 		username.append(1, payloadData[offset]);
 	}
-	//»ñÈ¡µÇÂ¼½ÇÉ«Ãû
+	//è·å–ç™»å½•è§’è‰²å
 	offset++;
 	unsigned char charLength = (unsigned char)payloadData[offset];
 	string charName;

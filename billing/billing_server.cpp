@@ -83,7 +83,7 @@ void BillingServer::run()
 	cout << "billing server run at " << this->config.getIp() << ":" << this->config.getPort() << endl;
 	if (this->testConnect()) {
 		this->accountModel = std::make_shared<AccountModel>(this->mysql);
-		//¼ÓÔØhandler
+		//åŠ è½½handler
 		this->loadHandler(std::make_shared<ConnectHandler>(*accountModel));
 		this->loadHandler(std::make_shared<PingHandler>(*accountModel));
 		this->loadHandler(std::make_shared<LoginHandler>(*accountModel));
@@ -95,7 +95,7 @@ void BillingServer::run()
 		ioService.run();
 	}
 	else {
-		//ÏÔÊ¾Êı¾İ¿âÁ¬½Ó³ö´íĞÅÏ¢
+		//æ˜¾ç¤ºæ•°æ®åº“è¿æ¥å‡ºé”™ä¿¡æ¯
 		std::cin.get();
 	}
 }
@@ -155,7 +155,7 @@ void BillingServer::sendTestData() {
 				Logger::write(debugStr);
 			}
 			else if (ec == asio::error::eof) {
-				//¶ÁÈ¡Íê±Ï
+				//è¯»å–å®Œæ¯•
 				Logger::write("read completely");
 			}
 			else {
@@ -190,11 +190,11 @@ bool BillingServer::testConnect()
 {
 	MYSQL *mysqlPointer = mysql.get();
 	mysql_init(mysqlPointer);
-	//³¢ÊÔÁ¬½Ó×î³¤Ê±¼ä
+	//å°è¯•è¿æ¥æœ€é•¿æ—¶é—´
 	const unsigned connectTimeOut = 3;
 	mysql_options(mysqlPointer, MYSQL_OPT_CONNECT_TIMEOUT, &connectTimeOut);
 	mysql_options(mysqlPointer, MYSQL_SET_CHARSET_NAME, "utf8");
-	//¿ªÆô¶ÏÏß×Ô¶¯ÖØÁ¬
+	//å¼€å¯æ–­çº¿è‡ªåŠ¨é‡è¿
 	my_bool reconnect = 1;
 	mysql_options(mysqlPointer, MYSQL_OPT_RECONNECT, &reconnect);
 	if (!mysql_real_connect(mysqlPointer, config.getDbHost(), config.getDbUser(), config.getDbPassword(), config.getDbName(), config.getDbPort(), NULL, 0))
@@ -204,7 +204,7 @@ bool BillingServer::testConnect()
 	}
 	cout << "connect to mysql server ok !" << endl;
 	cout << "mysql version: " << mysql_get_server_info(mysqlPointer) << endl;
-	//»ñÈ¡account±í×Ö¶ÎĞÅÏ¢
+	//è·å–accountè¡¨å­—æ®µä¿¡æ¯
 	if (mysql_query(mysqlPointer, "SHOW COLUMNS FROM account") != 0)
 	{
 		cout << "Get account table info Error: " << mysql_error(mysqlPointer) << endl;
@@ -215,7 +215,7 @@ bool BillingServer::testConnect()
 		cout << "Get account table info Error: " << mysql_error(mysqlPointer) << endl;
 		return false;
 	}
-	//»ñÈ¡×Ö¶ÎĞÅÏ¢
+	//è·å–å­—æ®µä¿¡æ¯
 	MYSQL_FIELD *fields = mysql_fetch_fields(res);
 	unsigned int fieldsCount = mysql_num_fields(res), fieldIndex, i;
 	for (i = 0; i < fieldsCount; i++) {
@@ -224,12 +224,12 @@ bool BillingServer::testConnect()
 			break;
 		}
 	}
-	//ĞèÒªÁ½¸ö×Ö¶Î:is_online,is_lock
+	//éœ€è¦ä¸¤ä¸ªå­—æ®µ:is_online,is_lock
 	bool hasExtraFields[] = { false,false };
 	char* extraFields[] = { "is_online","is_lock" };
 	auto row = mysql_fetch_row(res);
 	while (row) {
-		//ÅĞ¶ÏÊÇ·ñ´æÔÚ¸½¼Ó×Ö¶Î
+		//åˆ¤æ–­æ˜¯å¦å­˜åœ¨é™„åŠ å­—æ®µ
 		for (i = 0; i < 2; i++) {
 			if (strcmp(row[fieldIndex], extraFields[i]) == 0) {
 				hasExtraFields[i] = true;
@@ -238,7 +238,7 @@ bool BillingServer::testConnect()
 		row = mysql_fetch_row(res);
 	}
 	mysql_free_result(res);
-	//Ìí¼Ó¸½¼Ó×Ö¶Î
+	//æ·»åŠ é™„åŠ å­—æ®µ
 	for (i = 0; i < 2; i++) {
 		if (hasExtraFields[i]) {
 			continue;
@@ -270,7 +270,7 @@ void BillingServer::sendClientRequest(tcp::socket& socket, std::vector<char>& da
 				}
 				else {
 					if (responseSize < response->capacity()) {
-						//ÒÆ³ıÎ²²¿¶àÓà¿Õ¼ä
+						//ç§»é™¤å°¾éƒ¨å¤šä½™ç©ºé—´
 						response->resize(responseSize);
 					}
 					respHandler(socket, response, ec1);

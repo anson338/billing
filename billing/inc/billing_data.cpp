@@ -11,12 +11,12 @@ BillingData::BillingData(const vector<char>& request) :isValid(true)
 	tmpBytes.emplace_back(request.at(0));
 	tmpBytes.emplace_back(request.at(1));
 	bytesToHex(tmpBytes, tmp);
-	//Í·²¿2×Ö½Ú¼ì²â
+	//å¤´éƒ¨2å­—èŠ‚æ£€æµ‹
 	if (tmp.compare("AA55") != 0) {
 		this->isValid = false;
 	}
 	if (this->isValid) {
-		//Î²²¿2×Ö½Ú¼ì²â
+		//å°¾éƒ¨2å­—èŠ‚æ£€æµ‹
 		tmpBytes.clear();
 		tmpBytes.emplace_back(request.at(requestLength - 2));
 		tmpBytes.emplace_back(request.at(requestLength - 1));
