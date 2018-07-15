@@ -3,9 +3,6 @@
 #include "../request_handler.hpp"
 #include "../billing_data.hpp"
 #include <mysql.h>
-#include <iostream>
-using std::cout;
-using std::endl;
 
 class EnterGameHandler :public RequestHandler
 {
@@ -52,8 +49,12 @@ void EnterGameHandler::processRequest(BillingData& requestData, BillingData& res
 		offset++;
 		charName.append(1, payloadData[offset]);
 	}
+	//更新状态为在线模式
+	this->accountModel.updateOnlineStatus(username, true);
 	unsigned char loginResult = 1;
-	cout << "user [" << username << "] " << charName << " entered game " << endl;
+#ifdef OPEN_SERVER_DEBUG
+	Logger::write(string("user [") + username + "] " + charName + " entered game");
+#endif
 	//
 	responseData.appendChar(usernameLength);
 	responseData.appendText(username);

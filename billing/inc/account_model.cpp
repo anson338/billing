@@ -36,8 +36,6 @@ unsigned char AccountModel::getLoginResult(string & username, string & password)
 		//有角色在线
 		return 4;
 	}
-	//更新状态为在线模式
-	this->updateOnlineStatus(username, true);
 	return 1;
 }
 
