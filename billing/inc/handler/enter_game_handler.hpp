@@ -6,11 +6,12 @@
 #include <iostream>
 using std::cout;
 using std::endl;
-//0xA3
+
 class EnterGameHandler :public RequestHandler
 {
 public:
-	EnterGameHandler(MYSQL& mysqlHandler) :RequestHandler(mysqlHandler) {
+	EnterGameHandler(AccountModel& m) :RequestHandler(m) {
+		this->payloadType = 0xa3;
 #ifdef OPEN_SERVER_DEBUG
 		Logger::write("EnterGameHandler construct");
 #endif //OPEN_SERVER_DEBUG

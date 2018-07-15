@@ -6,7 +6,7 @@
 //独立版本
 #define ASIO_STANDALONE
 //使用proxy方式调试
-#define OPEN_PROXY_DEBUG
+//#define OPEN_PROXY_DEBUG
 #define PROXY_DEBUG_IP "192.168.200.1"
 #define PROXY_DEBUG_PORT 12681
 

@@ -6,11 +6,12 @@
 #include <iostream>
 using std::cout;
 using std::endl;
-//0xA2
+
 class LoginHandler :public RequestHandler
 {
 public:
-	LoginHandler(MYSQL& mysqlHandler) :RequestHandler(mysqlHandler) {
+	LoginHandler(AccountModel& m) :RequestHandler(m) {
+		this->payloadType = 0xa2;
 #ifdef OPEN_SERVER_DEBUG
 		Logger::write("LoginHandler construct");
 #endif //OPEN_SERVER_DEBUG
@@ -61,8 +62,7 @@ void LoginHandler::processRequest(BillingData& requestData, BillingData& respons
 		offset++;
 		loginIp.append(1, payloadData[offset]);
 	}
-	unsigned char loginResult = 1;
-	//@todo 登录验证
+	unsigned char loginResult = this->accountModel.getLoginResult(username, password);
 	const char* loginResultStr[] = {
 		"-",//0 无效值
 		"login success",//1 登录成功

@@ -4,11 +4,11 @@
 #include "../billing_data.hpp"
 #include <mysql.h>
 
-//0xA9
 class KickHandler:public RequestHandler
 {
 public:
-	KickHandler(MYSQL& mysqlHandler) :RequestHandler(mysqlHandler) {
+	KickHandler(AccountModel& m) :RequestHandler(m) {
+		this->payloadType = 0xa9;
 #ifdef OPEN_SERVER_DEBUG
 		Logger::write("KickHandler construct");
 #endif //OPEN_SERVER_DEBUG

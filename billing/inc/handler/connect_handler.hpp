@@ -5,10 +5,11 @@
 #include <mysql.h>
 
 //0xA0
-class ConnectHandler:public RequestHandler
+class ConnectHandler :public RequestHandler
 {
 public:
-	ConnectHandler(MYSQL& mysqlHandler) :RequestHandler(mysqlHandler) {
+	ConnectHandler(AccountModel& m) :RequestHandler(m) {
+		this->payloadType = 0xa0;
 #ifdef OPEN_SERVER_DEBUG
 		Logger::write("ConnectHandler construct");
 #endif //OPEN_SERVER_DEBUG

@@ -8,6 +8,8 @@
 #include "inc/handler/kick_handler.hpp"
 #include "inc/handler/enter_game_handler.hpp"
 #include "inc/handler/check_point_handler.hpp"
+#include "inc/account_model.hpp"
+#include <cstring>
 using std::cout;
 using std::endl;
 #ifdef OPEN_SERVER_DEBUG
@@ -80,16 +82,21 @@ void BillingServer::run()
 {
 	cout << "billing server run at " << this->config.getIp() << ":" << this->config.getPort() << endl;
 	if (this->testConnect()) {
+		this->accountModel = std::make_shared<AccountModel>(this->mysql);
 		//加载handler
-		this->handlers[0xa0] = std::make_shared<ConnectHandler>(*mysql);
-		this->handlers[0xa1] = std::make_shared<PingHandler>(*mysql);
-		this->handlers[0xa2] = std::make_shared<LoginHandler>(*mysql);
-		this->handlers[0xa3] = std::make_shared<EnterGameHandler>(*mysql);
-		this->handlers[0xa4] = std::make_shared<LogoutHandler>(*mysql);
-		this->handlers[0xa9] = std::make_shared<KickHandler>(*mysql);
-		this->handlers[0xe2] = std::make_shared<CheckPointHandler>(*mysql);
+		this->loadHandler(std::make_shared<ConnectHandler>(*accountModel));
+		this->loadHandler(std::make_shared<PingHandler>(*accountModel));
+		this->loadHandler(std::make_shared<LoginHandler>(*accountModel));
+		this->loadHandler(std::make_shared<EnterGameHandler>(*accountModel));
+		this->loadHandler(std::make_shared<LogoutHandler>(*accountModel));
+		this->loadHandler(std::make_shared<KickHandler>(*accountModel));
+		this->loadHandler(std::make_shared<CheckPointHandler>(*accountModel));
 		this->startAccept();
 		ioService.run();
+	}
+	else {
+		//显示数据库连接出错信息
+		std::cin.get();
 	}
 }
 void BillingServer::stop()
@@ -195,11 +202,56 @@ bool BillingServer::testConnect()
 		cout << "Connect to database Error: " << mysql_error(mysqlPointer) << endl;
 		return false;
 	}
-	else {
-		cout << "connect to mysql server ok !" << endl;
-		cout << "mysql version: " << mysql_get_server_info(mysqlPointer) << endl;
-		return true;
+	cout << "connect to mysql server ok !" << endl;
+	cout << "mysql version: " << mysql_get_server_info(mysqlPointer) << endl;
+	//获取account表字段信息
+	if (mysql_query(mysqlPointer, "SHOW COLUMNS FROM account") != 0)
+	{
+		cout << "Get account table info Error: " << mysql_error(mysqlPointer) << endl;
+		return false;
 	}
+	MYSQL_RES *res = mysql_store_result(mysqlPointer);
+	if (!res) {
+		cout << "Get account table info Error: " << mysql_error(mysqlPointer) << endl;
+		return false;
+	}
+	//获取字段信息
+	MYSQL_FIELD *fields = mysql_fetch_fields(res);
+	unsigned int fieldsCount = mysql_num_fields(res), fieldIndex, i;
+	for (i = 0; i < fieldsCount; i++) {
+		if (strcmp("Field", fields[i].name) == 0) {
+			fieldIndex = i;
+			break;
+		}
+	}
+	//需要两个字段:is_online,is_lock
+	bool hasExtraFields[] = { false,false };
+	char* extraFields[] = { "is_online","is_lock" };
+	auto row = mysql_fetch_row(res);
+	while (row) {
+		//判断是否存在附加字段
+		for (i = 0; i < 2; i++) {
+			if (strcmp(row[fieldIndex], extraFields[i]) == 0) {
+				hasExtraFields[i] = true;
+			}
+		}
+		row = mysql_fetch_row(res);
+	}
+	mysql_free_result(res);
+	//添加附加字段
+	for (i = 0; i < 2; i++) {
+		if (hasExtraFields[i]) {
+			continue;
+		}
+		string sql = "ALTER TABLE `account` ADD COLUMN `";
+		sql += extraFields[i];
+		sql += "`  smallint(1) UNSIGNED NOT NULL DEFAULT 0";
+		if (mysql_real_query(mysqlPointer, sql.c_str(), sql.length()) != 0) {
+			cout << "add extra column " << extraFields[i] << " failed: " << mysql_error(mysqlPointer) << endl;
+			return false;
+		}
+	}
+	return true;
 }
 
 void BillingServer::sendClientRequest(tcp::socket& socket, std::vector<char>& dataBytes, reqHandler respHandler) {
@@ -227,4 +279,9 @@ void BillingServer::sendClientRequest(tcp::socket& socket, std::vector<char>& da
 			//
 		}
 	});
+}
+
+void BillingServer::loadHandler(std::shared_ptr<RequestHandler> handler)
+{
+	this->handlers[handler->getPayloadType()] = handler;
 }

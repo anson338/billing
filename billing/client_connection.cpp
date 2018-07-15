@@ -143,6 +143,10 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 #ifdef OPEN_SERVER_DEBUG
 #ifdef OPEN_PROXY_DEBUG
 			this->callProxyServer(request, requestData);
+#else
+			Logger::write("can not process type : 0x" + hexStr);
+			requestData.doDump(hexStr);
+			Logger::write(hexStr);
 #endif
 #endif
 		}

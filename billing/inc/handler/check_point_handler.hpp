@@ -6,11 +6,12 @@
 #include <iostream>
 using std::cout;
 using std::endl;
-//0xE2
+
 class CheckPointHandler :public RequestHandler
 {
 public:
-	CheckPointHandler(MYSQL& mysqlHandler) :RequestHandler(mysqlHandler) {
+	CheckPointHandler(AccountModel& m) :RequestHandler(m) {
+		this->payloadType = 0xe2;
 #ifdef OPEN_SERVER_DEBUG
 		Logger::write("CheckPointHandler construct");
 #endif //OPEN_SERVER_DEBUG
@@ -64,9 +65,8 @@ void CheckPointHandler::processRequest(BillingData& requestData, BillingData& re
 	//
 	responseData.appendChar(usernameLength);
 	responseData.appendText(username);
-	cout << "user [" << username << "] " << charName << " checkpoint at " << loginIp << endl;
-	//@todo 获取点数
-	unsigned int pointResult = 666;
+	cout << "user [" << username << "] " << charName << " check point at " << loginIp << endl;
+	unsigned int pointResult = this->accountModel.getUserPoint(username);
 	pointResult = (pointResult + 1) * 1000;
 	unsigned char tmpChar;
 	tmpChar = (unsigned char)(pointResult >> 24);

@@ -2,15 +2,19 @@
 #include "logger.hpp"
 #include <mysql.h>
 #include "billing_data.hpp"
+#include "account_model.hpp"
 
 class RequestHandler
 {
 public:
-	RequestHandler(MYSQL& mysqlHandler):mysql(mysqlHandler) {}
-	virtual void processRequest(BillingData& requestData, BillingData& responseData)=0;
+	RequestHandler(AccountModel& m) :accountModel(m) {};
+	virtual void processRequest(BillingData& requestData, BillingData& responseData) = 0;
 	virtual ~RequestHandler() {
 	}
-
+	const unsigned char& getPayloadType() {
+		return this->payloadType;
+	}
 protected:
-	MYSQL & mysql;
+	unsigned char payloadType;
+	AccountModel& accountModel;
 };

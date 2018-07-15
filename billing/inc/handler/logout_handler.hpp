@@ -6,11 +6,12 @@
 #include <iostream>
 using std::cout;
 using std::endl;
-//0xA4
+
 class LogoutHandler :public RequestHandler
 {
 public:
-	LogoutHandler(MYSQL& mysqlHandler) :RequestHandler(mysqlHandler) {
+	LogoutHandler(AccountModel& m) :RequestHandler(m) {
+		this->payloadType = 0xa4;
 #ifdef OPEN_SERVER_DEBUG
 		Logger::write("LogoutHandler construct");
 #endif //OPEN_SERVER_DEBUG
@@ -41,6 +42,7 @@ void LogoutHandler::processRequest(BillingData& requestData, BillingData& respon
 		offset++;
 		username.append(1, payloadData[offset]);
 	}
+	this->accountModel.updateOnlineStatus(username, false);
 	unsigned char logoutResult = 0;
 	cout << "user [" << username << "] logout" << endl;
 	//
