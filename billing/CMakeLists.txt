@@ -1,7 +1,7 @@
-﻿# CMakeList.txt: billing 的 CMake 项目，包括源和定义
+# CMakeList.txt: billing 的 CMake 项目，包括源和定义
 # 此处特定于项目的逻辑。
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 2.8)
 
 # 添加依赖
 add_definitions("-DASIO_STANDALONE")
