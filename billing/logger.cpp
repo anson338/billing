@@ -1,10 +1,10 @@
 ﻿#include "inc/logger.hpp"
 using std::string;
 
-#ifdef OPEN_SERVER_DEBUG
-
 Logger::Logger() {
+#ifdef OPEN_SERVER_DEBUG
 	std::cout << "Logger system construct" << std::endl;
+#endif
 	fs.open("log.log", std::ios_base::app);
 }
 
@@ -12,7 +12,9 @@ Logger::~Logger() {
 	if (fs.is_open()) {
 		fs.close();
 	}
+#ifdef OPEN_SERVER_DEBUG
 	std::cout << "Logger system destruct" << std::endl;
+#endif
 }
 
 Logger& Logger::getInstance() {
@@ -37,4 +39,3 @@ void Logger::doWrite(const string& str) {
 	std::cout << str << std::endl;
 	this->fs << str << std::endl;
 }
-#endif

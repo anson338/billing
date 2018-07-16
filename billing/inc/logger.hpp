@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "common.hpp"
 //日志记录工具
-#ifdef OPEN_SERVER_DEBUG
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -18,5 +17,3 @@ private:
 	void doWrite(const char* str);
 	void doWrite(const std::string& str);
 };
-
-#endif // OPEN_SERVER_DEBUG
