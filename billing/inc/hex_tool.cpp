@@ -1,6 +1,9 @@
 ﻿#include "hex_tool.hpp"
 #include <cstring>
 #include <stdexcept>
+using std::vector;
+using std::string;
+using std::size_t;
 
 void hexToBytes(const char * input, vector<char>& output) {
 	size_t leng = strlen(input);

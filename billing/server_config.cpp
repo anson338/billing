@@ -3,7 +3,10 @@
 #include <fstream>
 #include <exception>
 #include <json.hpp>
+using std::string;
 using json = nlohmann::json;
+using std::set;
+using std::ifstream;
 
 ServerConfig::ServerConfig()
 {
@@ -14,9 +17,9 @@ ServerConfig::ServerConfig()
 	const  string defaultDbUser = "root";
 	const  string defaultDbPassword = "root";
 	const  string defaultDbName = "web";
-	const std::set<string> defaultAllowIps;
+	const set<string> defaultAllowIps;
 	try {
-		std::ifstream inFile(SERVER_CONFIG_FILE);
+		ifstream inFile(SERVER_CONFIG_FILE);
 		json config;
 		inFile >> config;
 		inFile.close();

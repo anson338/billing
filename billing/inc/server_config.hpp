@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include <string>
-using std::string;
 #include <set>
 
 /*服务器配置读取类*/
@@ -9,7 +8,7 @@ class ServerConfig
 public:
 	ServerConfig();
 	~ServerConfig();
-	const string& getIp() {
+	const std::string& getIp() {
 		return this->ip;
 	}
 	const unsigned short& getPort() {
@@ -30,16 +29,16 @@ public:
 	const char* getDbName() {
 		return this->dbName.c_str();
 	}
-	const std::set<string>& getAllowIps() {
+	const std::set<std::string>& getAllowIps() {
 		return this->allowIps;
 	}
 private:
-	string ip;
+	std::string ip;
 	unsigned short port;
-	string dbHost;
+	std::string dbHost;
 	unsigned int dbPort;
-	string dbUser;
-	string dbPassword;
-	string dbName;
-	std::set<string> allowIps;
+	std::string dbUser;
+	std::string dbPassword;
+	std::string dbName;
+	std::set<std::string> allowIps;
 };

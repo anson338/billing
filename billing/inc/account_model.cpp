@@ -1,5 +1,6 @@
 ﻿#include "account_model.hpp"
 #include <cstring>
+using std::string;
 
 AccountModel::AccountModel(std::shared_ptr<MYSQL> mysql) :mysqlHandler(mysql)
 {

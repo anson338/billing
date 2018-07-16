@@ -3,9 +3,6 @@
 #include "../request_handler.hpp"
 #include "../billing_data.hpp"
 #include <mysql.h>
-#include <iostream>
-using std::cout;
-using std::endl;
 
 class CheckPointHandler :public RequestHandler
 {
@@ -35,7 +32,7 @@ void CheckPointHandler::processRequest(BillingData& requestData, BillingData& re
 	size_t offset = 0, i;
 	//获取登录用户名
 	unsigned char usernameLength = (unsigned char)payloadData[offset];
-	string username;
+	std::string username;
 	username.resize(usernameLength);
 	username.clear();
 	for (i = 0; i < usernameLength; i++) {
@@ -45,7 +42,7 @@ void CheckPointHandler::processRequest(BillingData& requestData, BillingData& re
 	//当前IP
 	offset++;
 	unsigned char ipLength = (unsigned char)payloadData[offset];
-	string loginIp;
+	std::string loginIp;
 	loginIp.resize(ipLength);
 	loginIp.clear();
 	for (i = 0; i < ipLength; i++) {
@@ -55,7 +52,7 @@ void CheckPointHandler::processRequest(BillingData& requestData, BillingData& re
 	//获取登录角色名
 	offset++;
 	unsigned char charLength = (unsigned char)payloadData[offset];
-	string charName;
+	std::string charName;
 	charName.resize(charLength);
 	charName.clear();
 	for (i = 0; i < charLength; i++) {
@@ -65,7 +62,7 @@ void CheckPointHandler::processRequest(BillingData& requestData, BillingData& re
 	//
 	responseData.appendChar(usernameLength);
 	responseData.appendText(username);
-	cout << "user [" << username << "] " << charName << " check point at " << loginIp << endl;
+	Logger::write(std::string("user [") + username + "] " + charName + " check point at " + loginIp);
 	unsigned int pointResult = this->accountModel.getUserPoint(username);
 	pointResult = (pointResult + 1) * 1000;
 	unsigned char tmpChar;

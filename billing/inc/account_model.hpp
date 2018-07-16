@@ -3,7 +3,6 @@
 #include <mysql.h>
 #include <memory>
 #include <string>
-using std::string;
 
 class AccountInfo {
 public:
@@ -23,14 +22,14 @@ class AccountModel
 public:
 	AccountModel(std::shared_ptr<MYSQL> mysql);
 	~AccountModel();
-	unsigned char getLoginResult(string& username, string& password);
-	const unsigned int getUserPoint(string& username);
-	void updateOnlineStatus(string& username, bool isOnline);
+	unsigned char getLoginResult(std::string& username, std::string& password);
+	const unsigned int getUserPoint(std::string& username);
+	void updateOnlineStatus(std::string& username, bool isOnline);
 private:
 	std::shared_ptr<MYSQL> mysqlHandler;
 	MYSQL * getMysql() {
 		return this->mysqlHandler.get();
 	};
-	void updateLockStatus(string& username, bool isLock);
-	void getAccountInfo(string& username, AccountInfo& accountInfo);
+	void updateLockStatus(std::string& username, bool isLock);
+	void getAccountInfo(std::string& username, AccountInfo& accountInfo);
 };

@@ -3,9 +3,6 @@
 #include "../request_handler.hpp"
 #include "../billing_data.hpp"
 #include <mysql.h>
-#include <iostream>
-using std::cout;
-using std::endl;
 
 class LogoutHandler :public RequestHandler
 {
@@ -35,7 +32,7 @@ void LogoutHandler::processRequest(BillingData& requestData, BillingData& respon
 	size_t offset = 0, i;
 	//获取登录用户名
 	unsigned char usernameLength = (unsigned char)payloadData[offset];
-	string username;
+	std::string username;
 	username.resize(usernameLength);
 	username.clear();
 	for (i = 0; i < usernameLength; i++) {
@@ -44,7 +41,7 @@ void LogoutHandler::processRequest(BillingData& requestData, BillingData& respon
 	}
 	this->accountModel.updateOnlineStatus(username, false);
 	unsigned char logoutResult = 0;
-	cout << "user [" << username << "] logout" << endl;
+	Logger::write(std::string("user [") + username + "] logout");
 	//
 	responseData.appendChar(usernameLength);
 	responseData.appendText(username);

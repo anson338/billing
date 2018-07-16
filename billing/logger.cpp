@@ -1,10 +1,11 @@
 ﻿#include "inc/logger.hpp"
+using std::string;
 
 #ifdef OPEN_SERVER_DEBUG
 
 Logger::Logger() {
 	std::cout << "Logger system construct" << std::endl;
-	fs = std::ofstream("log.log", std::ios_base::app);
+	fs.open("log.log", std::ios_base::app);
 }
 
 Logger::~Logger() {

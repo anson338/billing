@@ -3,9 +3,6 @@
 #include "../request_handler.hpp"
 #include "../billing_data.hpp"
 #include <mysql.h>
-#include <iostream>
-using std::cout;
-using std::endl;
 
 class LoginHandler :public RequestHandler
 {
@@ -35,7 +32,7 @@ void LoginHandler::processRequest(BillingData& requestData, BillingData& respons
 	size_t offset = 0, i;
 	//获取登录用户名
 	unsigned char usernameLength = (unsigned char)payloadData[offset];
-	string username;
+	std::string username;
 	username.resize(usernameLength);
 	username.clear();
 	for (i = 0; i < usernameLength; i++) {
@@ -45,7 +42,7 @@ void LoginHandler::processRequest(BillingData& requestData, BillingData& respons
 	//获取登录密码
 	offset++;
 	unsigned char passLength = (unsigned char)payloadData[offset];
-	string password;
+	std::string password;
 	password.resize(passLength);
 	password.clear();
 	for (i = 0; i < passLength; i++) {
@@ -55,7 +52,7 @@ void LoginHandler::processRequest(BillingData& requestData, BillingData& respons
 	//登录IP
 	offset++;
 	unsigned char ipLength = (unsigned char)payloadData[offset];
-	string loginIp;
+	std::string loginIp;
 	loginIp.resize(ipLength);
 	loginIp.clear();
 	for (i = 0; i < ipLength; i++) {
@@ -75,7 +72,7 @@ void LoginHandler::processRequest(BillingData& requestData, BillingData& respons
 		"point is not available",//8 点数不够?(收费游戏使用?)
 		"regisiter"//9 账号注册弹窗
 	};
-	cout << "user [" << username << "] try to login from " << loginIp << " : " << loginResultStr[loginResult] << endl;
+	Logger::write(std::string("user [") + username + "] try to login from " + loginIp + " : " + loginResultStr[loginResult]);
 	//
 	responseData.appendChar(usernameLength);
 	responseData.appendText(username);

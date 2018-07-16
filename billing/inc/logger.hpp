@@ -5,19 +5,18 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-using std::string;
 
 class Logger {
 public:
 	static void write(const char* str);
-	static void write(const string& str);
+	static void write(const std::string& str);
 	~Logger();
 private:
 	Logger();
 	static Logger& getInstance();
 	std::ofstream fs;
 	void doWrite(const char* str);
-	void doWrite(const string& str);
+	void doWrite(const std::string& str);
 };
 
 #endif // OPEN_SERVER_DEBUG

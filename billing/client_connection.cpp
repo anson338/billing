@@ -1,10 +1,9 @@
 ﻿#include "inc/client_connection.hpp"
 #include "inc/billing_server.hpp"
-#include <iostream>
 #include "inc/hex_tool.hpp"
-using std::cout;
-using std::endl;
-#include <set>
+using asio::ip::tcp;
+using std::vector;
+using std::string;
 
 ClientConnection::ClientConnection(BillingServer * s, asio::io_service& io) :server(s), socket(io) {
 #ifdef OPEN_SERVER_DEBUG
@@ -68,7 +67,7 @@ void ClientConnection::writeHandler(const asio::error_code & error, std::size_t 
 void ClientConnection::readFromClient()
 {
 	if (this->server->stopMask) {
-		cout << "stop server read" << endl;
+		Logger::write("stop server read");
 	}
 	auto request = std::make_shared<vector<char>>(260);
 	request->resize(260);
@@ -119,7 +118,7 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 				if (!error) {
 					//
 					this->server->stopMask = true;
-					cout << "get command : stop" << endl;
+					Logger::write("get command : stop");
 					this->server->ioService.stop();
 				}
 				this->writeHandler(error, size);
@@ -139,7 +138,7 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 			this->processRequest((*it).second, requestData);
 		}
 		else {
-			cout << "[error]unkown BillingData type: 0x" << hexStr << endl;
+			Logger::write(string("[error]unkown BillingData type: 0x") + hexStr);
 #ifdef OPEN_SERVER_DEBUG
 #ifdef OPEN_PROXY_DEBUG
 			this->callProxyServer(request, requestData);
@@ -152,7 +151,7 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 		}
 	}
 	else {
-		cout << "not valid BillingData" << endl;
+		Logger::write("not valid BillingData");
 	}
 }
 
@@ -181,7 +180,7 @@ void ClientConnection::callProxyServer(std::shared_ptr<vector<char>> request, Bi
 	Logger::write(proxyDebugStr);
 	this->server->sendClientRequest(*(this->server->proxySocket), *request, [](tcp::socket& client, std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
 		if (ec) {
-			cout << "send proxy data failed: " << ec.message() << endl;
+			Logger::write(string("send proxy data failed: ") + ec.message());
 		}
 		else {
 			Logger::write("===get proxy data===");

@@ -1,6 +1,8 @@
 ﻿#include "logger.hpp"
 #include "billing_data.hpp"
 #include "hex_tool.hpp"
+using std::vector;
+using std::string;
 
 BillingData::BillingData(const vector<char>& request) :isValid(true)
 {

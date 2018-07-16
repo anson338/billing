@@ -1,6 +1,5 @@
 ﻿#include "inc/billing_server.hpp"
 #include "inc/client_connection.hpp"
-#include <iostream>
 #include "inc/handler/connect_handler.hpp"
 #include "inc/handler/login_handler.hpp"
 #include "inc/handler/logout_handler.hpp"
@@ -10,8 +9,11 @@
 #include "inc/handler/check_point_handler.hpp"
 #include "inc/account_model.hpp"
 #include <cstring>
-using std::cout;
-using std::endl;
+using asio::ip::tcp;
+using std::string;
+using std::to_string;
+using std::vector;
+
 #ifdef OPEN_SERVER_DEBUG
 #include "inc/billing_data.hpp"
 #endif
@@ -80,7 +82,7 @@ BillingServer::~BillingServer()
 
 void BillingServer::run()
 {
-	cout << "billing server run at " << this->config.getIp() << ":" << this->config.getPort() << endl;
+	Logger::write(string("billing server run at ") + this->config.getIp() + ":" + to_string(this->config.getPort()));
 	if (this->testConnect()) {
 		this->accountModel = std::make_shared<AccountModel>(this->mysql);
 		//加载handler
@@ -107,15 +109,15 @@ void BillingServer::stop()
 		clientSocket.set_option(asio::socket_base::keep_alive(true));
 		if (error) {
 			clientSocket.close();
-			cout << "connect failed: " << error.message() << endl;
+			Logger::write(string("connect failed: ") + error.message());
 			return;
 		}
 		this->sendClientRequest(clientSocket, sendData, [](tcp::socket& client, std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
 			if (ec) {
-				cout << "send \"stop\" command failed: " << ec.message() << endl;
+				Logger::write(string("send \"stop\" command failed: ") + ec.message());
 			}
 			else {
-				cout << "send \"stop\" command ok" << endl;
+				Logger::write("send \"stop\" command ok");
 			}
 			client.close();
 		});
@@ -137,13 +139,13 @@ void BillingServer::sendTestData() {
 	testData.packData(sendData);
 	string debugStr;
 	testData.doDump(debugStr);
-	cout << debugStr << endl;
+	Logger::write(debugStr);
 	tcp::socket clientSocket(ioService);
 	clientSocket.async_connect(serverEndpoint, [this, &clientSocket, &sendData](const asio::error_code& error) {
 		clientSocket.set_option(asio::socket_base::keep_alive(true));
 		if (error) {
 			clientSocket.close();
-			cout << "connect failed: " << error.message() << endl;
+			Logger::write(string("connect failed: ") + error.message());
 			return;
 		}
 		this->sendClientRequest(clientSocket, sendData, [](tcp::socket& client, std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
@@ -171,7 +173,7 @@ void BillingServer::sendTestData() {
 
 void BillingServer::startAccept() {
 	if (this->stopMask) {
-		cout << "stop server accept" << endl;
+		Logger::write("stop server accept");
 		return;
 	}
 	auto client = std::make_shared<ClientConnection>(this, ioService);
@@ -199,20 +201,20 @@ bool BillingServer::testConnect()
 	mysql_options(mysqlPointer, MYSQL_OPT_RECONNECT, &reconnect);
 	if (!mysql_real_connect(mysqlPointer, config.getDbHost(), config.getDbUser(), config.getDbPassword(), config.getDbName(), config.getDbPort(), NULL, 0))
 	{
-		cout << "Connect to database Error: " << mysql_error(mysqlPointer) << endl;
+		Logger::write(string("Connect to database Error: ") + mysql_error(mysqlPointer));
 		return false;
 	}
-	cout << "connect to mysql server ok !" << endl;
-	cout << "mysql version: " << mysql_get_server_info(mysqlPointer) << endl;
+	Logger::write("connect to mysql server ok !");
+	Logger::write(string("mysql version: ") + mysql_get_server_info(mysqlPointer));
 	//获取account表字段信息
 	if (mysql_query(mysqlPointer, "SHOW COLUMNS FROM account") != 0)
 	{
-		cout << "Get account table info Error: " << mysql_error(mysqlPointer) << endl;
+		Logger::write(string("Get account table info Error: ") + mysql_error(mysqlPointer));
 		return false;
 	}
 	MYSQL_RES *res = mysql_store_result(mysqlPointer);
 	if (!res) {
-		cout << "Get account table info Error: " << mysql_error(mysqlPointer) << endl;
+		Logger::write(string("Get account table info Error: ") + mysql_error(mysqlPointer));
 		return false;
 	}
 	//获取字段信息
@@ -247,7 +249,7 @@ bool BillingServer::testConnect()
 		sql += extraFields[i];
 		sql += "`  smallint(1) UNSIGNED NOT NULL DEFAULT 0";
 		if (mysql_real_query(mysqlPointer, sql.c_str(), sql.length()) != 0) {
-			cout << "add extra column " << extraFields[i] << " failed: " << mysql_error(mysqlPointer) << endl;
+			Logger::write(string("add extra column ") + extraFields[i] + " failed: " + mysql_error(mysqlPointer));
 			return false;
 		}
 	}

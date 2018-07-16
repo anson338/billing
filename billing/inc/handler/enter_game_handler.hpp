@@ -32,7 +32,7 @@ void EnterGameHandler::processRequest(BillingData& requestData, BillingData& res
 	size_t offset = 0, i;
 	//获取登录用户名
 	unsigned char usernameLength = (unsigned char)payloadData[offset];
-	string username;
+	std::string username;
 	username.resize(usernameLength);
 	username.clear();
 	for (i = 0; i < usernameLength; i++) {
@@ -42,7 +42,7 @@ void EnterGameHandler::processRequest(BillingData& requestData, BillingData& res
 	//获取登录角色名
 	offset++;
 	unsigned char charLength = (unsigned char)payloadData[offset];
-	string charName;
+	std::string charName;
 	charName.resize(charLength);
 	charName.clear();
 	for (i = 0; i < charLength; i++) {
@@ -53,7 +53,7 @@ void EnterGameHandler::processRequest(BillingData& requestData, BillingData& res
 	this->accountModel.updateOnlineStatus(username, true);
 	unsigned char loginResult = 1;
 #ifdef OPEN_SERVER_DEBUG
-	Logger::write(string("user [") + username + "] " + charName + " entered game");
+	Logger::write(std::string("user [") + username + "] " + charName + " entered game");
 #endif
 	//
 	responseData.appendChar(usernameLength);
