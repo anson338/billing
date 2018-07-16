@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "logger.hpp"
 #include "server_config.hpp"
 #include <asio.hpp>

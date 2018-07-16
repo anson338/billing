@@ -1,4 +1,4 @@
-#include "inc/billing_server.hpp"
+﻿#include "inc/billing_server.hpp"
 #include "inc/client_connection.hpp"
 #include <iostream>
 #include "inc/handler/connect_handler.hpp"
@@ -226,7 +226,7 @@ bool BillingServer::testConnect()
 	}
 	//需要两个字段:is_online,is_lock
 	bool hasExtraFields[] = { false,false };
-	char* extraFields[] = { "is_online","is_lock" };
+	const char* extraFields[] = { "is_online","is_lock" };
 	auto row = mysql_fetch_row(res);
 	while (row) {
 		//判断是否存在附加字段

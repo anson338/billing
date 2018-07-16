@@ -1,6 +1,6 @@
-#include "hex_tool.hpp"
+﻿#include "hex_tool.hpp"
 #include <cstring>
-#include <exception>
+#include <stdexcept>
 
 void hexToBytes(const char * input, vector<char>& output) {
 	size_t leng = strlen(input);

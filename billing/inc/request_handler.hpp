@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "logger.hpp"
 #include <mysql.h>
 #include "billing_data.hpp"

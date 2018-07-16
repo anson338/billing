@@ -1,8 +1,6 @@
-#include "inc/logger.hpp"
+﻿#include "inc/logger.hpp"
 
 #ifdef OPEN_SERVER_DEBUG
-Logger* Logger::instance = nullptr;
-Logger::GcObject Logger::gc;
 
 Logger::Logger() {
 	std::cout << "Logger system construct" << std::endl;
@@ -16,19 +14,17 @@ Logger::~Logger() {
 	std::cout << "Logger system destruct" << std::endl;
 }
 
-Logger* Logger::getInstance() {
-	if (!instance) {
-		instance = new Logger();
-	}
+Logger& Logger::getInstance() {
+	static Logger instance;
 	return instance;
 }
 
 void Logger::write(const char* str) {
-	getInstance()->doWrite(str);
+	getInstance().doWrite(str);
 }
 
 void Logger::write(const string& str) {
-	getInstance()->doWrite(str);
+	getInstance().doWrite(str);
 }
 
 void Logger::doWrite(const char* str) {

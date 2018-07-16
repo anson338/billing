@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "../logger.hpp"
 #include "../request_handler.hpp"
 #include "../billing_data.hpp"

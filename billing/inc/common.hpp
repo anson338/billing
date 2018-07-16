@@ -1,10 +1,8 @@
-#pragma once
+﻿#pragma once
 //打开调试
 #define OPEN_SERVER_DEBUG
 //配置文件
 #define SERVER_CONFIG_FILE "config.json"
-//独立版本
-#define ASIO_STANDALONE
 //使用proxy方式调试
 //#define OPEN_PROXY_DEBUG
 #define PROXY_DEBUG_IP "192.168.200.1"

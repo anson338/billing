@@ -1,4 +1,4 @@
-#include "inc/common.hpp"
+﻿#include "inc/common.hpp"
 #include "inc/billing_server.hpp"
 #include <cstring>
 int main(int argc, char** argv)
@@ -19,7 +19,14 @@ int main(int argc, char** argv)
 		}
 #endif
 	}
-	server = std::make_shared<BillingServer>();
-	server->run();
+	try
+	{
+		server = std::make_shared<BillingServer>();
+		server->run();
+	}
+	catch (const std::exception& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
 	return 0;
 }
