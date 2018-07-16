@@ -2,6 +2,7 @@
 #include "inc/server_config.hpp"
 #include <fstream>
 #include <exception>
+#include <stdexcept>
 #include <json.hpp>
 using std::string;
 using json = nlohmann::json;
@@ -20,6 +21,9 @@ ServerConfig::ServerConfig()
 	const set<string> defaultAllowIps;
 	try {
 		ifstream inFile(SERVER_CONFIG_FILE);
+		if (!inFile) {
+			throw std::runtime_error("read file failed");
+		}
 		json config;
 		inFile >> config;
 		inFile.close();
