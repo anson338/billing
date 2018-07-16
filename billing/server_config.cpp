@@ -9,7 +9,7 @@ ServerConfig::ServerConfig()
 {
 	const string defaultIp = "127.0.0.1";
 	const unsigned short defaultPort = 12680;
-	const string defaultDbHost = "localhost";
+	const string defaultDbHost = "127.0.0.1";
 	const unsigned int defaultDbPort = 3306;
 	const  string defaultDbUser = "root";
 	const  string defaultDbPassword = "root";

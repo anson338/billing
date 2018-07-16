@@ -1,7 +1,7 @@
 {
-  "ip": "192.168.200.1",
+  "ip": "127.0.0.1",
   "port": 12680,
-  "db_host": "localhost",
+  "db_host": "127.0.0.1",
   "db_port": 3306,
   "db_user": "root",
   "db_password": "root",
