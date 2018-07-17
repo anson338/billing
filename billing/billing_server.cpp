@@ -227,7 +227,7 @@ bool BillingServer::testConnect()
 	}
 	//获取字段信息
 	MYSQL_FIELD *fields = mysql_fetch_fields(res);
-	unsigned int fieldsCount = mysql_num_fields(res), fieldIndex, i;
+	unsigned int fieldsCount = mysql_num_fields(res), fieldIndex = 0, i;
 	for (i = 0; i < fieldsCount; i++) {
 		if (strcmp("Field", fields[i].name) == 0) {
 			fieldIndex = i;
