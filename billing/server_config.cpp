@@ -9,7 +9,7 @@ using json = nlohmann::json;
 using std::set;
 using std::ifstream;
 
-ServerConfig::ServerConfig()
+ServerConfig::ServerConfig() :status(false)
 {
 	const string defaultIp = "127.0.0.1";
 	const unsigned short defaultPort = 12680;
@@ -35,14 +35,10 @@ ServerConfig::ServerConfig()
 		this->dbPassword = config.value("db_password", defaultDbPassword);
 		this->dbName = config.value("db_name", defaultDbName);
 		this->allowIps = config.value("allow_ips", defaultAllowIps);
-#ifdef OPEN_SERVER_DEBUG
-		Logger::write(string("load config file ") + SERVER_CONFIG_FILE + " ok !");
-#endif //OPEN_SERVER_DEBUG
+		this->status = true;
 	}
 	catch (const std::exception& e) {
-#ifdef OPEN_SERVER_DEBUG
-		Logger::write(string("load config file ") + SERVER_CONFIG_FILE + " failed: " + string(e.what()));
-#endif //OPEN_SERVER_DEBUG
+		//赋予默认值
 		this->ip = defaultIp;
 		this->port = defaultPort;
 		this->dbHost = defaultDbHost;
@@ -51,6 +47,7 @@ ServerConfig::ServerConfig()
 		this->dbPassword = defaultDbPassword;
 		this->dbName = defaultDbName;
 		this->allowIps = defaultAllowIps;
+		this->errorMessage.append(e.what());
 	}
 }
 

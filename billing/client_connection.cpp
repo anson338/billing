@@ -26,7 +26,7 @@ void ClientConnection::acceptHandler(const asio::error_code & error)
 {
 
 #ifdef OPEN_SERVER_DEBUG
-	Logger::write("connection entered");
+	Logger::write("client connected");
 	Logger::write("prepare accept new");
 #endif
 	server->startAccept();
@@ -78,7 +78,12 @@ void ClientConnection::readFromClient()
 		//读取错误
 		if (error) {
 #ifdef OPEN_SERVER_DEBUG
-			Logger::write(string("read client error: ") + error.message());
+			if (error == asio::error::eof) {
+				Logger::write(string("client disconnect"));
+			}
+			else {
+				Logger::write(string("read client error: ") + error.message());
+			}
 #endif
 		}
 		else {

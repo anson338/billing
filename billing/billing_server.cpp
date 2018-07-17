@@ -63,6 +63,9 @@ BillingServer::BillingServer(bool mask) :serverEndpoint(
 	)
 ), stopMask(false)
 {
+#ifdef OPEN_SERVER_DEBUG
+	Logger::write("billing server constrcut");
+#endif
 }
 
 BillingServer::~BillingServer()
@@ -82,6 +85,11 @@ BillingServer::~BillingServer()
 
 void BillingServer::run()
 {
+	if (!this->config.loadSuccess()) {
+		Logger::write(string("load config file \"") + SERVER_CONFIG_FILE + "\" failed : " + config.getErrorMessage());
+		std::cin.get();
+		return;
+	}
 	Logger::write(string("billing server run at ") + this->config.getIp() + ":" + to_string(this->config.getPort()));
 	if (this->testConnect()) {
 		this->accountModel = std::make_shared<AccountModel>(this->mysql);

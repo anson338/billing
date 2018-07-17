@@ -32,6 +32,12 @@ public:
 	const std::set<std::string>& getAllowIps() {
 		return this->allowIps;
 	}
+	const bool& loadSuccess() {
+		return this->status;
+	}
+	const char* getErrorMessage() {
+		return this->errorMessage.c_str();
+	}
 private:
 	std::string ip;
 	unsigned short port;
@@ -41,4 +47,7 @@ private:
 	std::string dbPassword;
 	std::string dbName;
 	std::set<std::string> allowIps;
+	//配置文件加载状态
+	bool status;
+	std::string errorMessage;
 };
