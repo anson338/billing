@@ -102,6 +102,7 @@ void BillingServer::run()
 		this->loadHandler(std::make_shared<KickHandler>(*accountModel));
 		this->loadHandler(std::make_shared<CheckPointHandler>(*accountModel));
 		this->startAccept();
+		Logger::write("billing server start success.");
 		ioService.run();
 	}
 	else {
