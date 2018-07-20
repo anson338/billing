@@ -46,7 +46,7 @@ BillingServer::BillingServer() :serverEndpoint(
 		if (error) {
 			this->proxySocket->close();
 			this->proxySocket = nullptr;
-			cout << "connect to proxy failed: " << error.message() << endl;
+			Logger::write(string("connect to proxy failed: ") + error.message());
 		}
 		else {
 			Logger::write("connect to proxy server success");
@@ -121,14 +121,14 @@ void BillingServer::stop()
 			Logger::write(string("connect failed: ") + error.message());
 			return;
 		}
-		this->sendClientRequest(clientSocket, sendData, [](tcp::socket& client, std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
+		this->sendClientRequest(clientSocket, sendData, [&clientSocket](std::shared_ptr<vector<char>> response, const asio::error_code& ec)mutable {
 			if (ec) {
 				Logger::write(string("send \"stop\" command failed: ") + ec.message());
 			}
 			else {
 				Logger::write("send \"stop\" command ok");
 			}
-			client.close();
+			clientSocket.close();
 		});
 	});
 	ioService.run();
@@ -157,7 +157,7 @@ void BillingServer::sendTestData() {
 			Logger::write(string("connect failed: ") + error.message());
 			return;
 		}
-		this->sendClientRequest(clientSocket, sendData, [](tcp::socket& client, std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
+		this->sendClientRequest(clientSocket, sendData, [&clientSocket]( std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
 			if (!ec) {
 				Logger::write("get response");
 				string debugStr;
@@ -173,7 +173,7 @@ void BillingServer::sendTestData() {
 				// Some other error.
 				Logger::write(string("some eror: ") + ec.message());
 			}
-			client.close();
+			clientSocket.close();
 		});
 	});
 	ioService.run();
@@ -268,7 +268,7 @@ bool BillingServer::testConnect()
 void BillingServer::sendClientRequest(tcp::socket& socket, std::vector<char>& dataBytes, reqHandler respHandler) {
 	asio::async_write(socket, asio::buffer(dataBytes), [&socket, respHandler](const asio::error_code& ec, std::size_t bytes_transferred) {
 		if (ec) {
-			respHandler(socket, nullptr, ec);
+			respHandler(nullptr, ec);
 			return;
 		}
 		if (respHandler) {
@@ -276,7 +276,7 @@ void BillingServer::sendClientRequest(tcp::socket& socket, std::vector<char>& da
 			auto response = std::make_shared<std::vector<char>>(260);
 			socket.async_receive(asio::buffer(*response), [response, &socket, respHandler](const asio::error_code& ec1, std::size_t responseSize) {
 				if (ec1) {
-					respHandler(socket, nullptr, ec1);
+					respHandler(nullptr, ec1);
 					return;
 				}
 				else {
@@ -284,7 +284,7 @@ void BillingServer::sendClientRequest(tcp::socket& socket, std::vector<char>& da
 						//移除尾部多余空间
 						response->resize(responseSize);
 					}
-					respHandler(socket, response, ec1);
+					respHandler(response, ec1);
 				}
 			});
 			//

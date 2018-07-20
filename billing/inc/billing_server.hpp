@@ -6,12 +6,13 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <functional>
 #include "request_handler.hpp"
 
 class BillingServer
 {
 public:
-	typedef void(*reqHandler)(asio::ip::tcp::socket& client,std::shared_ptr<std::vector<char>> response, const asio::error_code& ec);
+	typedef std::function<void(std::shared_ptr<std::vector<char>> response, const asio::error_code& ec)> reqHandler;
 	BillingServer();
 	BillingServer(bool mask);
 	~BillingServer();

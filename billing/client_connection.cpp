@@ -146,7 +146,30 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 			Logger::write(string("[error]unkown BillingData type: 0x") + hexStr);
 #ifdef OPEN_SERVER_DEBUG
 #ifdef OPEN_PROXY_DEBUG
-			this->callProxyServer(request, requestData);
+			this->callProxyServer(request, requestData, [this](std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
+
+				if (ec) {
+					Logger::write(string("send proxy data failed: ") + ec.message());
+				}
+				else {
+					Logger::write("===get proxy data===");
+					BillingData proxyData(*response);
+					string proxyDebugStr1;
+					proxyData.doDump(proxyDebugStr1);
+					Logger::write(proxyDebugStr1);
+					Logger::write("===full data========");
+					bytesToHexDebug(*response, proxyDebugStr1);
+					Logger::write(proxyDebugStr1);
+					Logger::write("===end proxy data===");
+					//调用proxy处理
+					asio::async_write(socket,
+						asio::buffer(*response),
+						[this](const asio::error_code& error, std::size_t size) {
+						this->writeHandler(error, size);
+					});
+				}
+
+			});
 #else
 			Logger::write("can not process type : 0x" + hexStr);
 			requestData.doDump(hexStr);
@@ -178,27 +201,13 @@ void ClientConnection::processRequest(std::shared_ptr<RequestHandler> handler, B
 
 #ifdef OPEN_SERVER_DEBUG
 #ifdef OPEN_PROXY_DEBUG
-void ClientConnection::callProxyServer(std::shared_ptr<vector<char>> request, BillingData& requestData) {
+void ClientConnection::callProxyServer(std::shared_ptr<std::vector<char>> request, BillingData & requestData, proxyRespHandler respHandler)
+{
 	string proxyDebugStr;
 	requestData.doDump(proxyDebugStr);
 	Logger::write("===send data to proxy===");
 	Logger::write(proxyDebugStr);
-	this->server->sendClientRequest(*(this->server->proxySocket), *request, [](tcp::socket& client, std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
-		if (ec) {
-			Logger::write(string("send proxy data failed: ") + ec.message());
-		}
-		else {
-			Logger::write("===get proxy data===");
-			BillingData proxyData(*response);
-			string proxyDebugStr1;
-			proxyData.doDump(proxyDebugStr1);
-			Logger::write(proxyDebugStr1);
-			Logger::write("===full data========");
-			bytesToHexDebug(*response, proxyDebugStr1);
-			Logger::write(proxyDebugStr1);
-			Logger::write("===end proxy data===");
-		}
-	});
+	this->server->sendClientRequest(*(this->server->proxySocket), *request,respHandler);
 }
 #endif
 #endif
