@@ -132,17 +132,17 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 		}
 	}
 	BillingData requestData(*request);
+	string hexStr;
 	if (requestData.isDataValid()) {
 
 		unsigned char requestType = requestData.getPayloadType();
-		string hexStr;
-		vector<char> payloadTypeBytes(1, requestType);
-		bytesToHex(payloadTypeBytes, hexStr);
 		auto it = server->handlers.find(requestType);
 		if (it != server->handlers.end()) {
-			this->processRequest((*it).second, requestData);
+			this->processRequest(it->second, requestData);
 		}
 		else {
+			vector<char> payloadTypeBytes(1, requestType);
+			bytesToHex(payloadTypeBytes, hexStr);
 			Logger::write(string("[error]unkown BillingData type: 0x") + hexStr);
 #ifdef OPEN_SERVER_DEBUG
 #ifdef OPEN_PROXY_DEBUG
@@ -180,6 +180,8 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 	}
 	else {
 		Logger::write("not valid BillingData");
+		bytesToHexDebug(*request, hexStr);
+		Logger::write(hexStr);
 	}
 }
 
@@ -207,7 +209,7 @@ void ClientConnection::callProxyServer(std::shared_ptr<std::vector<char>> reques
 	requestData.doDump(proxyDebugStr);
 	Logger::write("===send data to proxy===");
 	Logger::write(proxyDebugStr);
-	this->server->sendClientRequest(*(this->server->proxySocket), *request,respHandler);
+	this->server->sendClientRequest(*(this->server->proxySocket), *request, respHandler);
 }
 #endif
 #endif
