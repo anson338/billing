@@ -144,6 +144,8 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 			vector<char> payloadTypeBytes(1, requestType);
 			bytesToHex(payloadTypeBytes, hexStr);
 			Logger::write(string("[error]unkown BillingData type: 0x") + hexStr);
+			requestData.doDump(hexStr);
+			Logger::write(hexStr);
 #ifdef OPEN_SERVER_DEBUG
 #ifdef OPEN_PROXY_DEBUG
 			this->callProxyServer(request, requestData, [this](std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
