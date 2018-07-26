@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <string>
 #include <set>
+#include <rapidjson/document.h>
 
 /*服务器配置读取类*/
 class ServerConfig
@@ -50,4 +51,9 @@ private:
 	//配置文件加载状态
 	bool status;
 	std::string errorMessage;
+	//json相关
+	void fetchJsonVal(const rapidjson::Document& d, const char * itemKey, std::string& output);
+	void fetchJsonVal(const rapidjson::Document& d, const char * itemKey, unsigned short& output);
+	void fetchJsonVal(const rapidjson::Document& d, const char * itemKey, unsigned int& output);
+	void fetchJsonVal(const rapidjson::Document& d, const char * itemKey, std::set<std::string>& output);
 };

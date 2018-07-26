@@ -1,3 +1,6 @@
 [submodule "billing/deps/asio"]
 	path = billing/deps/asio
 	url = https://github.com/chriskohlhoff/asio.git
+[submodule "billing/deps/rapidjson"]
+	path = billing/deps/rapidjson
+	url = https://github.com/Tencent/rapidjson.git

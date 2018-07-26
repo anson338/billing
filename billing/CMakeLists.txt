@@ -5,7 +5,7 @@ cmake_minimum_required (VERSION 2.8)
 
 # 添加依赖
 add_definitions("-DASIO_STANDALONE" "-DNDEBUG")
-include_directories("deps/json" "deps/asio/asio/include")
+include_directories("deps/json" "deps/asio/asio/include" "deps/rapidjson/include")
 #mysql
 IF (WIN32)
 	add_definitions("-D_WIN32_WINNT=0x0501")
