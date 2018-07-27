@@ -6,7 +6,7 @@
 class BillingData
 {
 public:
-	BillingData(const std::vector<char>& request);
+	BillingData(std::vector<char>& request);
 	BillingData();
 	~BillingData();
 	const unsigned char& getPayloadType() {
@@ -80,4 +80,5 @@ private:
 	unsigned char payloadType;
 	std::vector<char> id;
 	std::vector<char> payloadData;
+	void parseData(std::vector<char>& request);
 };

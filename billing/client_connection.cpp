@@ -109,10 +109,12 @@ void ClientConnection::readFromClient()
 
 void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std::size_t size)
 {
+	//加入缓冲区
+	this->cacheBuffer.insert(this->cacheBuffer.end(), request->begin(), request->end());
 	//判断是否为命令
-	if (request->size() == 4) {
+	if (this->cacheBuffer.size() >= 4) {
 		string commandHex;
-		bytesToHex(*request, commandHex);
+		bytesToHex(this->cacheBuffer.begin(), this->cacheBuffer.begin() + 4, commandHex);
 		//close命令
 		if (commandHex.compare("00000000") == 0) {
 			//响应close命令
@@ -131,9 +133,9 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 			return;
 		}
 	}
-	BillingData requestData(*request);
+	BillingData requestData(this->cacheBuffer);
 	string hexStr;
-	if (requestData.isDataValid()) {
+	while (requestData.isDataValid()) {
 
 		unsigned char requestType = requestData.getPayloadType();
 		auto it = server->handlers.find(requestType);
@@ -179,11 +181,7 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 #endif
 #endif
 		}
-	}
-	else {
-		Logger::write("not valid BillingData");
-		bytesToHexDebug(*request, hexStr);
-		Logger::write(hexStr);
+		requestData = BillingData(this->cacheBuffer);
 	}
 }
 

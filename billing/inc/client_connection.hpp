@@ -21,6 +21,8 @@ public:
 private:
 	BillingServer * server;
 	asio::ip::tcp::socket socket;
+	//缓冲区
+	std::vector<char> cacheBuffer;
 	void readFromClient();
 	void processRequest(std::shared_ptr<std::vector<char>> request, std::size_t size);
 	void processRequest(std::shared_ptr<RequestHandler> handler, BillingData& requestData);

@@ -4,43 +4,72 @@
 using std::vector;
 using std::string;
 
-BillingData::BillingData(const vector<char>& request) :isValid(true)
+BillingData::BillingData(vector<char>& request) :isValid(false)
 {
-	unsigned short requestLength = (unsigned short)request.size();
-	string tmp;
-	vector<char> tmpBytes(2);
-	tmpBytes.clear();
-	tmpBytes.emplace_back(request.at(0));
-	tmpBytes.emplace_back(request.at(1));
-	bytesToHex(tmpBytes, tmp);
-	//头部2字节检测
-	if (tmp.compare("AA55") != 0) {
-		this->isValid = false;
+	if (!request.empty()) {
+		this->parseData(request);
 	}
-	if (this->isValid) {
-		//尾部2字节检测
-		tmpBytes.clear();
-		tmpBytes.emplace_back(request.at(requestLength - 2));
-		tmpBytes.emplace_back(request.at(requestLength - 1));
-		bytesToHex(tmpBytes, tmp);
-		if (tmp.compare("55AA") != 0) {
-			this->isValid = false;
+}
+
+void BillingData::parseData(vector<char>& request)
+{
+	auto it = request.begin();
+	auto offset = it;
+	unsigned char mask0 = 0xAA;
+	unsigned char mask1 = 0x55;
+	unsigned char tmpChar = 0;
+	bool matchMask = false;
+	while (it != request.end()) {
+		tmpChar = static_cast<unsigned char>(*it);
+		if (tmpChar == mask0) {
+			if (it + 1 == request.end()) {
+				return;
+			}
+			tmpChar = static_cast<unsigned char>(*(it + 1));
+			if (tmpChar == mask1) {
+				matchMask = true;
+				it++;
+				offset = it + 1;
+				break;
+			}
 		}
+		it++;
 	}
-	if (this->isValid) {
-		unsigned short len0, len1;
-		len0 = (unsigned char)request.at(2);
-		len1 = (unsigned char)request.at(3);
-		this->payloadLength = (len0 << 8) + len1;
-		this->payloadType = (unsigned char)request.at(4);
-		this->id.emplace_back(request.at(5));
-		this->id.emplace_back(request.at(6));
-		size_t dataCount = this->payloadLength - 3;
-		this->payloadData.resize(dataCount);
-		this->payloadData.clear();
-		for (size_t i = 0; i < dataCount; i++) {
-			this->payloadData.emplace_back(request.at(7 + i));
-		}
+	if (!matchMask) {
+		return;
+	}
+	//两字节的长度
+	if (it + 2 >= request.end()) {
+		return;
+	}
+	it++;
+	this->payloadLength = static_cast<unsigned short>(static_cast<unsigned char>(*it)) << 8;
+	it++;
+	this->payloadLength += static_cast<unsigned short>(static_cast<unsigned char>(*it));
+	//判断剩余字节数量
+	if (it + static_cast<int>(this->payloadLength) + 2 >= request.end()) {
+		//剩余字节不足
+		return;
+	}
+	//一字节类型标识
+	it++;
+	this->payloadType = static_cast<unsigned char>(*it);
+	//两字节的id
+	it++;
+	this->id.insert(this->id.end(), it, it + 2);
+	//负载数据
+	it++;
+	this->payloadData.insert(this->payloadData.end(), it, it + static_cast<int>(this->payloadLength) - 3);
+	//尾部字节判断
+	it++;
+	if ((static_cast<unsigned char>(*it) == mask1) && (static_cast<unsigned char>(*(it + 1)) == mask0)) {
+		this->isValid = true;
+		//从缓冲区移除这段字节序列
+		request.erase(request.begin(),it+2);
+	}
+	else {
+		//移除头部序列AA55
+		request.erase(request.begin(), offset);
 	}
 }
 
