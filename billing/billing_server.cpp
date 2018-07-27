@@ -27,7 +27,7 @@ using std::vector;
 	config.getPort()\
 	) : serverEndpoint
 
-BillingServer::BillingServer() :serverEndpoint(T_SERVER_ENDPOINT()), acceptor(
+BillingServer::BillingServer() : serverEndpoint(T_SERVER_ENDPOINT()), acceptor(
 	std::make_shared<tcp::acceptor>(
 		ioService,
 		serverEndpoint
@@ -86,7 +86,9 @@ void BillingServer::run()
 {
 	if (!this->config.loadSuccess()) {
 		Logger::write(string("load config file \"") + SERVER_CONFIG_FILE + "\" failed : " + config.getErrorMessage());
+#ifdef IN_WIN32_SYSTEM
 		std::cin.get();
+#endif // IN_WIN32_SYSTEM
 		return;
 	}
 	Logger::write(string("billing server run at ") + this->config.getIp() + ":" + to_string(this->config.getPort()));
@@ -105,8 +107,9 @@ void BillingServer::run()
 		ioService.run();
 	}
 	else {
-		//显示数据库连接出错信息
+#ifdef IN_WIN32_SYSTEM
 		std::cin.get();
+#endif // IN_WIN32_SYSTEM
 	}
 }
 void BillingServer::stop()

@@ -8,7 +8,7 @@ add_definitions("-DASIO_STANDALONE" "-DNDEBUG")
 include_directories("deps/asio/asio/include" "deps/rapidjson/include" "deps/hexstring/hexstring")
 #mysql
 IF (WIN32)
-	add_definitions("-D_WIN32_WINNT=0x0501")
+	add_definitions("-D_WIN32_WINNT=0x0501" "-DIN_WIN32_SYSTEM")
 	MESSAGE(STATUS "Now is windows")
 	include_directories("deps/mysql/mysql-connector-c-6.1.11-win32/include")
 	link_directories("${CMAKE_CURRENT_SOURCE_DIR}/deps/mysql/mysql-connector-c-6.1.11-win32/lib/vs14")
