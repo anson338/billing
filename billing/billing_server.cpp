@@ -144,14 +144,18 @@ void BillingServer::sendTestData() {
 	idArr.emplace_back('a');
 	idArr.emplace_back('b');
 	testData.setId(idArr);
-	testData.setPayloadType(0xa0);
+	testData.setPayloadType(0xa1);
 	testData.setPayloadData("000000"
-		"650d3139322e3136382e3230302e33");
-	vector<char> sendData;
+		"650000");
+	vector<char> sendData,tmpData;
 	testData.packData(sendData);
-	string debugStr;
-	testData.doDump(debugStr);
-	Logger::write(debugStr);
+	sendData.emplace_back('x');
+	sendData.emplace_back('y');
+	idArr[0] = 'c';
+	idArr[1] = 'd';
+	testData.setId(idArr);
+	testData.packData(tmpData);
+	sendData.insert(sendData.end(), tmpData.begin(), tmpData.end());
 	tcp::socket clientSocket(ioService);
 	auto clientEndPoint = T_CLIENT_ENDPOINT();
 	clientSocket.async_connect(clientEndPoint, [this, &clientSocket, &sendData](const asio::error_code& error) {

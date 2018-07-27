@@ -94,7 +94,7 @@ void ClientConnection::readFromClient()
 				string inputDebugStr;
 				bytesToHexDebug(request->begin(), request->begin() + size, inputDebugStr);
 				Logger::write("client request");
-				Logger::write(inputDebugStr);
+				Logger::write(string("\r\n") + inputDebugStr);
 #endif
 				this->processRequest(request, size);
 			}
@@ -133,7 +133,10 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 	BillingData requestData(this->cacheBuffer);
 	string hexStr;
 	while (requestData.isDataValid()) {
-
+#ifdef OPEN_SERVER_DEBUG
+		//requestData.doDump(hexStr);
+		//Logger::write(hexStr);
+#endif
 		unsigned char requestType = requestData.getPayloadType();
 		auto it = server->handlers.find(requestType);
 		if (it != server->handlers.end()) {
