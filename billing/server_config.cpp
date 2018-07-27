@@ -33,6 +33,9 @@ ServerConfig::ServerConfig() :status(false)
 		this->status = true;
 	}
 	catch (const std::exception& e) {
+		//赋默认值
+		this->ip += "127.0.0.1";
+		this->port = 12680;
 		this->errorMessage.append(e.what());
 	}
 }
