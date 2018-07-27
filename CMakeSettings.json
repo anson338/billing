@@ -2,9 +2,9 @@
   // 请参阅 https://go.microsoft.com//fwlink//?linkid=834763 了解有关此文件的详细信息。
   "configurations": [
     {
-      "name": "x86-Debug",
+      "name": "x86-Release",
       "generator": "Ninja",
-      "configurationType": "Debug",
+      "configurationType": "MinSizeRel",
       "inheritEnvironments": [ "msvc_x86" ],
       "buildRoot": "${projectDir}\\build\\${name}",
       "installRoot": "${projectDir}\\install\\${name}",
@@ -13,9 +13,9 @@
       "ctestCommandArgs": ""
     },
     {
-      "name": "x86-Release",
+      "name": "x86-Debug",
       "generator": "Ninja",
-      "configurationType": "MinSizeRel",
+      "configurationType": "Debug",
       "inheritEnvironments": [ "msvc_x86" ],
       "buildRoot": "${projectDir}\\build\\${name}",
       "installRoot": "${projectDir}\\install\\${name}",

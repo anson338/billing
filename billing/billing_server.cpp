@@ -269,19 +269,19 @@ bool BillingServer::testConnect()
 	return true;
 }
 
-void BillingServer::sendClientRequest(tcp::socket& socket, std::vector<char>& dataBytes, reqHandler respHandler) {
-	asio::async_write(socket, asio::buffer(dataBytes), [&socket, respHandler](const asio::error_code& ec, std::size_t bytes_transferred) {
+void BillingServer::sendClientRequest(tcp::socket& socket, vector<char>& dataBytes, std::size_t size, reqHandler respHandler)
+{
+	asio::async_write(socket, (size == 0) ? asio::buffer(dataBytes) : asio::buffer(dataBytes, size), [&socket, respHandler](const asio::error_code& ec, std::size_t bytes_transferred) {
 		if (ec) {
 			respHandler(nullptr, ec);
 			return;
 		}
 		if (respHandler) {
 			//
-			auto response = std::make_shared<std::vector<char>>(260);
+			auto response = std::make_shared<vector<char>>(260);
 			socket.async_receive(asio::buffer(*response), [response, &socket, respHandler](const asio::error_code& ec1, std::size_t responseSize) {
 				if (ec1) {
 					respHandler(nullptr, ec1);
-					return;
 				}
 				else {
 					if (responseSize < response->capacity()) {
@@ -294,6 +294,10 @@ void BillingServer::sendClientRequest(tcp::socket& socket, std::vector<char>& da
 			//
 		}
 	});
+}
+
+void BillingServer::sendClientRequest(tcp::socket& socket, vector<char>& dataBytes, reqHandler respHandler) {
+	this->sendClientRequest(socket, dataBytes, 0, respHandler);
 }
 
 void BillingServer::loadHandler(std::shared_ptr<RequestHandler> handler)

@@ -58,14 +58,14 @@ void BillingData::parseData(vector<char>& request)
 	it++;
 	this->id.insert(this->id.end(), it, it + 2);
 	//负载数据
-	it++;
+	it += 2;
 	this->payloadData.insert(this->payloadData.end(), it, it + static_cast<int>(this->payloadLength) - 3);
 	//尾部字节判断
-	it++;
+	it += (static_cast<int>(this->payloadLength) - 3);
 	if ((static_cast<unsigned char>(*it) == mask1) && (static_cast<unsigned char>(*(it + 1)) == mask0)) {
 		this->isValid = true;
 		//从缓冲区移除这段字节序列
-		request.erase(request.begin(),it+2);
+		request.erase(request.begin(), it + 2);
 	}
 	else {
 		//移除头部序列AA55

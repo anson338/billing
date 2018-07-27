@@ -28,7 +28,7 @@ private:
 	void processRequest(std::shared_ptr<RequestHandler> handler, BillingData& requestData);
 #ifdef OPEN_SERVER_DEBUG
 #ifdef OPEN_PROXY_DEBUG
-	void callProxyServer(std::shared_ptr<std::vector<char>> request, BillingData& requestData, proxyRespHandler respHandler);
+	void callProxyServer(std::shared_ptr<std::vector<char>> request, std::size_t size, BillingData& requestData, proxyRespHandler respHandler);
 #endif
 #endif
 };

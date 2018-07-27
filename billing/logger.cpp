@@ -1,5 +1,8 @@
 ﻿#include "inc/logger.hpp"
+#include <chrono>
+#include <ctime>
 using std::string;
+using std::chrono::system_clock;
 
 Logger::Logger() {
 #ifdef OPEN_SERVER_DEBUG
@@ -31,11 +34,24 @@ void Logger::write(const string& str) {
 }
 
 void Logger::doWrite(const char* str) {
+	outputCurrentTime(std::cout);
 	std::cout << str << std::endl;
+	outputCurrentTime(this->fs);
 	this->fs << str << std::endl;
 }
 
 void Logger::doWrite(const string& str) {
+	outputCurrentTime(std::cout);
 	std::cout << str << std::endl;
+	outputCurrentTime(this->fs);
 	this->fs << str << std::endl;
+}
+
+void Logger::outputCurrentTime(std::ostream & out)
+{
+	auto n = system_clock::now();
+	auto t = system_clock::to_time_t(n);
+	char timeStr[22];;
+	std::strftime(timeStr, sizeof(timeStr), "[%Y-%m-%d %H:%M:%S]", std::localtime(&t));
+	out << timeStr;
 }

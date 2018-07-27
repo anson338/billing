@@ -16,4 +16,5 @@ private:
 	std::ofstream fs;
 	void doWrite(const char* str);
 	void doWrite(const std::string& str);
+	void outputCurrentTime(std::ostream& out);
 };

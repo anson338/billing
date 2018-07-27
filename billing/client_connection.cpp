@@ -90,15 +90,11 @@ void ClientConnection::readFromClient()
 			//开启下一次读取
 			this->readFromClient();
 			if (size > 0) {
-				if (size < request->capacity()) {
-					//移除尾部多余空间
-					request->resize(size);
-				}
 #ifdef OPEN_SERVER_DEBUG
-				//string inputDebugStr;
-				//bytesToHexDebug(*request, inputDebugStr);
-				//Logger::write("client request");
-				//Logger::write(inputDebugStr);
+				string inputDebugStr;
+				bytesToHexDebug(request->begin(), request->begin() + size, inputDebugStr);
+				Logger::write("client request");
+				Logger::write(inputDebugStr);
 #endif
 				this->processRequest(request, size);
 			}
@@ -110,7 +106,7 @@ void ClientConnection::readFromClient()
 void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std::size_t size)
 {
 	//加入缓冲区
-	this->cacheBuffer.insert(this->cacheBuffer.end(), request->begin(), request->end());
+	this->cacheBuffer.insert(this->cacheBuffer.end(), request->begin(), request->begin() + size);
 	//判断是否为命令
 	if (this->cacheBuffer.size() >= 4) {
 		string commandHex;
@@ -120,13 +116,14 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 			//响应close命令
 			auto selfPointer(shared_from_this());
 			asio::async_write(socket,
-				asio::buffer(*request),
+				asio::buffer("---"),
 				[this, selfPointer](const asio::error_code& error, std::size_t size) {
 				if (!error) {
 					//
 					this->server->stopMask = true;
 					Logger::write("get command : stop");
 					this->server->ioService.stop();
+					Logger::write("billing server stoped");
 				}
 				this->writeHandler(error, size);
 			});
@@ -150,7 +147,7 @@ void ClientConnection::processRequest(std::shared_ptr<vector<char>> request, std
 			Logger::write(hexStr);
 #ifdef OPEN_SERVER_DEBUG
 #ifdef OPEN_PROXY_DEBUG
-			this->callProxyServer(request, requestData, [this](std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
+			this->callProxyServer(request, size, requestData, [this](std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
 
 				if (ec) {
 					Logger::write(string("send proxy data failed: ") + ec.message());
@@ -203,13 +200,13 @@ void ClientConnection::processRequest(std::shared_ptr<RequestHandler> handler, B
 
 #ifdef OPEN_SERVER_DEBUG
 #ifdef OPEN_PROXY_DEBUG
-void ClientConnection::callProxyServer(std::shared_ptr<std::vector<char>> request, BillingData & requestData, proxyRespHandler respHandler)
+void ClientConnection::callProxyServer(std::shared_ptr<std::vector<char>> request, std::size_t size, BillingData & requestData, proxyRespHandler respHandler)
 {
 	string proxyDebugStr;
 	requestData.doDump(proxyDebugStr);
 	Logger::write("===send data to proxy===");
 	Logger::write(proxyDebugStr);
-	this->server->sendClientRequest(*(this->server->proxySocket), *request, respHandler);
+	this->server->sendClientRequest(*(this->server->proxySocket), *request, size, respHandler);
 }
 #endif
 #endif

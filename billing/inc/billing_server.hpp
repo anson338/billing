@@ -33,7 +33,8 @@ private:
 	bool testConnect();
 	std::shared_ptr<AccountModel> accountModel;
 	std::map<unsigned char, std::shared_ptr<RequestHandler>> handlers;
-	void sendClientRequest(asio::ip::tcp::socket& socket, std::vector<char>& dataBytes,reqHandler respHandler);
+	void sendClientRequest(asio::ip::tcp::socket& socket, std::vector<char>& dataBytes, std::size_t size, reqHandler respHandler);
+	void sendClientRequest(asio::ip::tcp::socket& socket, std::vector<char>& dataBytes, reqHandler respHandler);
 	void loadHandler(std::shared_ptr<RequestHandler> handler);
 #ifdef OPEN_SERVER_DEBUG
 #ifdef OPEN_PROXY_DEBUG
