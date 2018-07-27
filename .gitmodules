@@ -4,3 +4,6 @@
 [submodule "billing/deps/rapidjson"]
 	path = billing/deps/rapidjson
 	url = https://github.com/Tencent/rapidjson.git
+[submodule "billing/deps/hexstring"]
+	path = billing/deps/hexstring
+	url = https://github.com/liuguangw/hexstring.git

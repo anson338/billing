@@ -17,13 +17,17 @@ using std::vector;
 #ifdef OPEN_SERVER_DEBUG
 #include "inc/billing_data.hpp"
 #endif
-
-BillingServer::BillingServer() :serverEndpoint(
-	tcp::endpoint(
-		asio::ip::address::from_string(config.getIp()),
-		config.getPort()
+#define T_SERVER_ENDPOINT() tcp::endpoint( \
+	(config.getIp() == "0.0.0.0") ? asio::ip::address_v4::any() : asio::ip::address::from_string(config.getIp()),\
+	config.getPort()\
 	)
-), acceptor(
+
+#define T_CLIENT_ENDPOINT() (config.getIp() == "0.0.0.0")?tcp::endpoint( \
+	asio::ip::address_v4::loopback() ,\
+	config.getPort()\
+	) : serverEndpoint
+
+BillingServer::BillingServer() :serverEndpoint(T_SERVER_ENDPOINT()), acceptor(
 	std::make_shared<tcp::acceptor>(
 		ioService,
 		serverEndpoint
@@ -56,12 +60,7 @@ BillingServer::BillingServer() :serverEndpoint(
 #endif //OPEN_SERVER_DEBUG
 }
 
-BillingServer::BillingServer(bool mask) :serverEndpoint(
-	tcp::endpoint(
-		asio::ip::address::from_string(config.getIp()),
-		config.getPort()
-	)
-), stopMask(false)
+BillingServer::BillingServer(bool mask) :serverEndpoint(T_SERVER_ENDPOINT()), stopMask(false)
 {
 #ifdef OPEN_SERVER_DEBUG
 	Logger::write("billing server constrcut");
@@ -114,7 +113,8 @@ void BillingServer::stop()
 {
 	tcp::socket clientSocket(ioService);
 	vector<char> sendData(4, (char)0x0);
-	clientSocket.async_connect(serverEndpoint, [this, &clientSocket, &sendData](const asio::error_code& error) {
+	auto clientEndPoint = T_CLIENT_ENDPOINT();
+	clientSocket.async_connect(clientEndPoint, [this, &clientSocket, &sendData](const asio::error_code& error) {
 		clientSocket.set_option(asio::socket_base::keep_alive(true));
 		if (error) {
 			clientSocket.close();
@@ -150,14 +150,15 @@ void BillingServer::sendTestData() {
 	testData.doDump(debugStr);
 	Logger::write(debugStr);
 	tcp::socket clientSocket(ioService);
-	clientSocket.async_connect(serverEndpoint, [this, &clientSocket, &sendData](const asio::error_code& error) {
+	auto clientEndPoint = T_CLIENT_ENDPOINT();
+	clientSocket.async_connect(clientEndPoint, [this, &clientSocket, &sendData](const asio::error_code& error) {
 		clientSocket.set_option(asio::socket_base::keep_alive(true));
 		if (error) {
 			clientSocket.close();
 			Logger::write(string("connect failed: ") + error.message());
 			return;
 		}
-		this->sendClientRequest(clientSocket, sendData, [&clientSocket]( std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
+		this->sendClientRequest(clientSocket, sendData, [&clientSocket](std::shared_ptr<std::vector<char>> response, const asio::error_code& ec) {
 			if (!ec) {
 				Logger::write("get response");
 				string debugStr;
