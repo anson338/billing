@@ -5,6 +5,7 @@
 #include "inc/handler/reg_handler.hpp"
 #include "inc/handler/logout_handler.hpp"
 #include "inc/handler/ping_handler.hpp"
+#include "inc/handler/keep_handler.hpp"
 #include "inc/handler/kick_handler.hpp"
 #include "inc/handler/enter_game_handler.hpp"
 #include "inc/handler/check_point_handler.hpp"
@@ -98,6 +99,7 @@ void BillingServer::run()
 		//加载handler
 		this->loadHandler(std::make_shared<ConnectHandler>(*accountModel));
 		this->loadHandler(std::make_shared<PingHandler>(*accountModel));
+		this->loadHandler(std::make_shared<KeepHandler>(*accountModel));
 		this->loadHandler(std::make_shared<LoginHandler>(*accountModel, this->config.isAutoRegOpen()));
 		if (this->config.isAutoRegOpen()) {
 			this->loadHandler(std::make_shared<RegHandler>(*accountModel));
@@ -145,18 +147,13 @@ void BillingServer::stop()
 void BillingServer::sendTestData() {
 	BillingData testData;
 	vector<char> idArr;
-	idArr.emplace_back('a');
-	idArr.emplace_back('b');
+	idArr.emplace_back(0);
+	idArr.emplace_back(0);
 	testData.setId(idArr);
-	testData.setPayloadType(0xf1);
-	testData.setPayloadData("146161626263634067616D652E736F68"
-		"752E636F6D2039636266386134646362"
-		"38653330363832623932376633353264"
-		"36353539613020653130616463333934"
-		"39626135396162626535366530353766"
-		"323066383833650D3139322E3136382E"
-		"3230302E310F36373537393732324071"
-		"712E636F6D000000000000");
+	testData.setPayloadType(0xA6);
+	testData.setPayloadData("166C69756775616E674067616D652E73"
+		"6F68752E636F6D006C5B685F9E5B686D"
+		"B1");
 	vector<char> sendData;
 	testData.packData(sendData);
 	tcp::socket clientSocket(ioService);
