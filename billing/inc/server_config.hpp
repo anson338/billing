@@ -33,6 +33,9 @@ public:
 	const std::set<std::string>& getAllowIps() {
 		return this->allowIps;
 	}
+	const bool& isAutoRegOpen() {
+		return this->autoRegOpen;
+	}
 	const bool& loadSuccess() {
 		return this->status;
 	}
@@ -48,6 +51,7 @@ private:
 	std::string dbPassword;
 	std::string dbName;
 	std::set<std::string> allowIps;
+	bool autoRegOpen;
 	//配置文件加载状态
 	bool status;
 	std::string errorMessage;
@@ -56,4 +60,5 @@ private:
 	void fetchJsonVal(const rapidjson::Document& d, const char * itemKey, unsigned short& output);
 	void fetchJsonVal(const rapidjson::Document& d, const char * itemKey, unsigned int& output);
 	void fetchJsonVal(const rapidjson::Document& d, const char * itemKey, std::set<std::string>& output);
+	void loadRegisterConfig(const rapidjson::Document& d, bool& output);
 };

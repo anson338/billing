@@ -23,6 +23,7 @@ public:
 	AccountModel(std::shared_ptr<MYSQL> mysql);
 	~AccountModel();
 	unsigned char getLoginResult(std::string& username, std::string& password);
+	unsigned char getRegResult(std::string& username, std::string& password, std::string& superPassword, std::string& email);
 	const unsigned int getUserPoint(std::string& username);
 	void updateOnlineStatus(std::string& username, bool isOnline);
 private:

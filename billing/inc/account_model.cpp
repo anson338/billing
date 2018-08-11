@@ -40,6 +40,78 @@ unsigned char AccountModel::getLoginResult(string & username, string & password)
 	return 1;
 }
 
+unsigned char AccountModel::getRegResult(std::string & username, std::string & password, std::string & superPassword, std::string & email)
+{
+	unsigned char regError = 4;
+	AccountInfo accountInfo;
+	this->getAccountInfo(username, accountInfo);
+	if (accountInfo.id != 0) {
+		//用户已存在
+		return regError;
+	}
+	auto mysql = this->getMysql();
+	auto stmt = mysql_stmt_init(mysql);
+	if (!stmt) {
+		//out of memory
+		return regError;
+	}
+	const char* sql = "INSERT INTO account (name, password, question, email) VALUES (?, ?, ?, ?)";
+	if (mysql_stmt_prepare(stmt, sql, strlen(sql)) != 0) {
+#ifdef OPEN_SERVER_DEBUG
+		Logger::write("mysql_stmt_prepare() failed");
+		Logger::write(mysql_stmt_error(stmt));
+#endif
+		return regError;
+	}
+	MYSQL_BIND bind[4];
+	memset(bind, 0, sizeof(bind));
+	unsigned char offset=0;
+	unsigned long nameSize = username.length();
+	bind[offset].buffer_type = MYSQL_TYPE_STRING;
+	bind[offset].buffer = (void*)username.c_str();
+	bind[offset].buffer_length = nameSize + 1;
+	bind[offset].is_null = 0;
+	bind[offset].length = &nameSize;
+	offset++;
+	unsigned long passwordSize = password.length();
+	bind[offset].buffer_type = MYSQL_TYPE_STRING;
+	bind[offset].buffer = (void*)password.c_str();
+	bind[offset].buffer_length = passwordSize + 1;
+	bind[offset].is_null = 0;
+	bind[offset].length = &passwordSize;
+	offset++;
+	unsigned long questionSize = superPassword.length();
+	bind[offset].buffer_type = MYSQL_TYPE_STRING;
+	bind[offset].buffer = (void*)superPassword.c_str();
+	bind[offset].buffer_length = questionSize + 1;
+	bind[offset].is_null = 0;
+	bind[offset].length = &questionSize;
+	offset++;
+	unsigned long emailSize = email.length();
+	bind[offset].buffer_type = MYSQL_TYPE_STRING;
+	bind[offset].buffer = (void*)email.c_str();
+	bind[offset].buffer_length = emailSize + 1;
+	bind[offset].is_null = 0;
+	bind[offset].length = &emailSize;
+	if (mysql_stmt_bind_param(stmt, bind)) {
+#ifdef OPEN_SERVER_DEBUG
+		Logger::write("mysql_stmt_bind_param() failed");
+		Logger::write(mysql_stmt_error(stmt));
+#endif
+		return regError;
+	}
+	if (mysql_stmt_execute(stmt))
+	{
+#ifdef OPEN_SERVER_DEBUG
+		Logger::write("mysql_stmt_execute() failed");
+		Logger::write(mysql_stmt_error(stmt));
+#endif
+		return regError;
+	}
+	mysql_stmt_close(stmt);
+	return 1;
+}
+
 const unsigned int AccountModel::getUserPoint(string & username)
 {
 	AccountInfo accountInfo;

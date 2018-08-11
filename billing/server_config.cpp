@@ -30,6 +30,7 @@ ServerConfig::ServerConfig() :status(false)
 		fetchJsonVal(d, "db_password", this->dbPassword);
 		fetchJsonVal(d, "db_name", this->dbName);
 		fetchJsonVal(d, "allow_ips", this->allowIps);
+		loadRegisterConfig(d, this->autoRegOpen);
 		this->status = true;
 	}
 	catch (const std::exception& e) {
@@ -99,4 +100,20 @@ void ServerConfig::fetchJsonVal(const rapidjson::Document& d, const char * itemK
 		}
 		output.emplace(v.GetString());
 	}
+}
+
+void ServerConfig::loadRegisterConfig(const rapidjson::Document & d, bool & output)
+{
+	const char* itemKey = "auto_reg";
+	string itemField = string("[") + itemKey + "]";
+	if (!d.HasMember(itemKey)) {
+		//默认开启自动注册
+		output = true;
+		return;
+	}
+	const Value& itemVal = d[itemKey];
+	if (!itemVal.IsBool()) {
+		throw std::runtime_error(itemField + " type error: not bool !");
+	}
+	output = itemVal.GetBool();
 }

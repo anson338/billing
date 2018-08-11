@@ -2,6 +2,7 @@
 #include "inc/client_connection.hpp"
 #include "inc/handler/connect_handler.hpp"
 #include "inc/handler/login_handler.hpp"
+#include "inc/handler/reg_handler.hpp"
 #include "inc/handler/logout_handler.hpp"
 #include "inc/handler/ping_handler.hpp"
 #include "inc/handler/kick_handler.hpp"
@@ -97,7 +98,10 @@ void BillingServer::run()
 		//加载handler
 		this->loadHandler(std::make_shared<ConnectHandler>(*accountModel));
 		this->loadHandler(std::make_shared<PingHandler>(*accountModel));
-		this->loadHandler(std::make_shared<LoginHandler>(*accountModel));
+		this->loadHandler(std::make_shared<LoginHandler>(*accountModel, this->config.isAutoRegOpen()));
+		if (this->config.isAutoRegOpen()) {
+			this->loadHandler(std::make_shared<RegHandler>(*accountModel));
+		}
 		this->loadHandler(std::make_shared<EnterGameHandler>(*accountModel));
 		this->loadHandler(std::make_shared<LogoutHandler>(*accountModel));
 		this->loadHandler(std::make_shared<KickHandler>(*accountModel));
@@ -144,18 +148,17 @@ void BillingServer::sendTestData() {
 	idArr.emplace_back('a');
 	idArr.emplace_back('b');
 	testData.setId(idArr);
-	testData.setPayloadType(0xa1);
-	testData.setPayloadData("000000"
-		"650000");
-	vector<char> sendData,tmpData;
+	testData.setPayloadType(0xf1);
+	testData.setPayloadData("146161626263634067616D652E736F68"
+		"752E636F6D2039636266386134646362"
+		"38653330363832623932376633353264"
+		"36353539613020653130616463333934"
+		"39626135396162626535366530353766"
+		"323066383833650D3139322E3136382E"
+		"3230302E310F36373537393732324071"
+		"712E636F6D000000000000");
+	vector<char> sendData;
 	testData.packData(sendData);
-	sendData.emplace_back('x');
-	sendData.emplace_back('y');
-	idArr[0] = 'c';
-	idArr[1] = 'd';
-	testData.setId(idArr);
-	testData.packData(tmpData);
-	sendData.insert(sendData.end(), tmpData.begin(), tmpData.end());
 	tcp::socket clientSocket(ioService);
 	auto clientEndPoint = T_CLIENT_ENDPOINT();
 	clientSocket.async_connect(clientEndPoint, [this, &clientSocket, &sendData](const asio::error_code& error) {
@@ -171,6 +174,8 @@ void BillingServer::sendTestData() {
 				string debugStr;
 				BillingData responseData(*response);
 				responseData.doDump(debugStr);
+				Logger::write(debugStr);
+				bytesToHexDebug(*response, debugStr);
 				Logger::write(debugStr);
 			}
 			else if (ec == asio::error::eof) {

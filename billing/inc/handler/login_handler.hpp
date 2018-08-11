@@ -7,16 +7,17 @@
 class LoginHandler :public RequestHandler
 {
 public:
-	LoginHandler(AccountModel& m) :RequestHandler(m) {
+	LoginHandler(AccountModel& m, bool autoRegOpen) :RequestHandler(m), _autoRegOpen(autoRegOpen) {
 		this->payloadType = 0xa2;
 #ifdef OPEN_SERVER_DEBUG
-		Logger::write("LoginHandler construct");
+		Logger::write(std::string("LoginHandler construct ,autoRegOpen: ") + (autoRegOpen ? "true" : "false"));
 #endif //OPEN_SERVER_DEBUG
 	}
 	~LoginHandler();
 	void processRequest(BillingData& requestData, BillingData& responseData);
 private:
-
+	//是否开启自动注册
+	bool _autoRegOpen;
 };
 
 LoginHandler::~LoginHandler()
@@ -60,6 +61,10 @@ void LoginHandler::processRequest(BillingData& requestData, BillingData& respons
 		loginIp.append(1, payloadData[offset]);
 	}
 	unsigned char loginResult = this->accountModel.getLoginResult(username, password);
+	//如果未开启自动注册,登录一个不存在的账号时,返回密码错误
+	if ((!this->_autoRegOpen) && (loginResult==9)) {
+		loginResult = 3;
+	}
 	const char* loginResultStr[] = {
 		"-",//0 无效值
 		"login success",//1 登录成功
