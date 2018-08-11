@@ -46,7 +46,7 @@ void KeepHandler::processRequest(BillingData& requestData, BillingData& response
 	offset++;
 	userLevel = payloadData[offset] << 8;
 	offset++;
-	userLevel = payloadData[offset];
+	userLevel += payloadData[offset];
 	Logger::write(std::string("user [") + username + "] level: " + std::to_string(userLevel));
 #endif
 	//
